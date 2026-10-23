@@ -1,0 +1,1 @@
+select table_name,column_name,is_identity,identity_generation from information_schema.columns where table_schema='public' and column_name='id' and table_name in ('users','carpools','bookings','messages');
