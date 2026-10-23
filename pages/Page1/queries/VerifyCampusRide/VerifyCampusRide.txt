@@ -1,0 +1,10 @@
+SELECT jsonb_build_object(
+ 'backend',campusride.api('{"op":"ping"}'::jsonb),
+ 'users',(SELECT count(*) FROM public.users),
+ 'trips',(SELECT count(*) FROM public.carpools),
+ 'bookings',(SELECT count(*) FROM public.bookings),
+ 'messages',(SELECT count(*) FROM public.messages),
+ 'private_tables_rls',(SELECT bool_and(c.relrowsecurity) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='campusride' AND c.relkind='r'),
+ 'anonymous_api_access',has_function_privilege('anon','campusride.api(jsonb)','EXECUTE'),
+ 'missing_trip_guard',position('IF trip.id IS NULL OR other_id IS NULL' in pg_get_functiondef('campusride.api(jsonb)'::regprocedure))>0
+) AS verification;
