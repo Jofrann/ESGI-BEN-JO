@@ -1,1 +1,4 @@
-DO $fix$ DECLARE s text; BEGIN SELECT pg_get_functiondef('campusride.api(jsonb)'::regprocedure) INTO s; s:=replace(s,'IF other_id=uid OR NOT EXISTS','IF trip.id IS NULL OR other_id IS NULL OR other_id=uid OR NOT EXISTS'); s:=replace(s,'IF trip.author_id=uid OR trip.status','IF trip.departure_at IS NULL OR trip.author_id=uid OR trip.status'); EXECUTE s; END $fix$;
+WITH request AS (
+ SELECT {{ JSON.stringify(Custom1.model.request || {op:"ping"}) }}::jsonb AS p
+)
+SELECT campusride.api(p) || jsonb_build_object('request_id',p->>'request_id') AS result FROM request;

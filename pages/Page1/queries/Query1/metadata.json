@@ -5,7 +5,7 @@
   "pluginType": "DB",
   "unpublishedAction": {
     "actionConfiguration": {
-      "body": "DO $fix$ DECLARE s text; BEGIN SELECT pg_get_functiondef('campusride.api(jsonb)'::regprocedure) INTO s; s:=replace(s,'IF other_id=uid OR NOT EXISTS','IF trip.id IS NULL OR other_id IS NULL OR other_id=uid OR NOT EXISTS'); s:=replace(s,'IF trip.author_id=uid OR trip.status','IF trip.departure_at IS NULL OR trip.author_id=uid OR trip.status'); EXECUTE s; END $fix$;",
+      "body": "WITH request AS (\n SELECT {{ JSON.stringify(Custom1.model.request || {op:\"ping\"}) }}::jsonb AS p\n)\nSELECT campusride.api(p) || jsonb_build_object('request_id',p->>'request_id') AS result FROM request;",
       "encodeParamsToggle": true,
       "paginationType": "NONE",
       "pluginSpecifiedTemplates": [
@@ -22,7 +22,11 @@
       "name": "Covoiturage",
       "pluginId": "postgres-plugin"
     },
-    "dynamicBindingPathList": [],
+    "dynamicBindingPathList": [
+      {
+        "key": "body"
+      }
+    ],
     "name": "Query1",
     "pageId": "Page1",
     "runBehaviour": "MANUAL",
