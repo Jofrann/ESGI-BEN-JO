@@ -137,8 +137,9 @@ BEGIN
  ELSIF op='read_messages' THEN UPDATE public.messages SET read_at=now() WHERE recipient_id=uid AND sender_id=(p->>'sender_id')::bigint AND read_at IS NULL;
  ELSIF op='read_notifications' THEN UPDATE campusride.notifications SET read_at=now() WHERE user_id=uid AND read_at IS NULL;
  ELSIF op='profile' THEN
+   IF p ? 'avatar_url' AND COALESCE(p->>'avatar_url','')<>'' AND (length(p->>'avatar_url')>100000 OR (p->>'avatar_url') !~ '^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$') THEN RAISE EXCEPTION 'Photo invalide ou trop volumineuse.'; END IF;
    IF length(btrim(COALESCE(p->>'name','')))<2 OR length(btrim(COALESCE(p->>'starting_point','')))<2 THEN RAISE EXCEPTION 'Indiquez votre nom et votre lieu de départ.'; END IF;
-   UPDATE public.users SET name=left(btrim(p->>'name'),100),school=left(COALESCE(p->>'school',''),150),starting_point=left(btrim(p->>'starting_point'),300),updated_at=now() WHERE id=uid;
+   UPDATE public.users SET name=left(btrim(p->>'name'),100),school=left(COALESCE(p->>'school',''),150),starting_point=left(btrim(p->>'starting_point'),300),avatar_url=CASE WHEN p ? 'avatar_url' THEN NULLIF(p->>'avatar_url','') ELSE avatar_url END,updated_at=now() WHERE id=uid;
  ELSIF op='preferences' THEN UPDATE public.users SET notification_preferences=jsonb_build_object('booking',COALESCE((p->>'booking')::boolean,true),'cancellation',COALESCE((p->>'cancellation')::boolean,true),'message',COALESCE((p->>'message')::boolean,true)),updated_at=now() WHERE id=uid;
  ELSE RAISE EXCEPTION 'Action inconnue.';
  END IF;

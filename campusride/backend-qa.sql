@@ -21,5 +21,8 @@ BEGIN
  IF (SELECT count(*) FROM campusride.notifications WHERE carpool_id=t)<4 THEN RAISE EXCEPTION 'QA notifications'; END IF;
  r:=campusride.api(jsonb_build_object('op','refresh','token',b->>'token')); IF jsonb_array_length(r#>'{data,messages}')<>1 THEN RAISE EXCEPTION 'QA message scope'; END IF;
  r:=campusride.api(jsonb_build_object('op','refresh','token','invalid')); IF r->>'code'<>'SESSION_EXPIRED' THEN RAISE EXCEPTION 'QA unauthenticated'; END IF;
- RAISE EXCEPTION 'QA_PASSED: registration, login, publish, reserve, idempotency, capacity, authorization, messages, cancellation, freed seats, reviews, notifications, privacy, session. ALL TEST ROWS ROLLED BACK.';
+ r:=campusride.api(jsonb_build_object('op','profile','token',a->>'token','request_id','invalid-photo','name','QA-driver-'||n,'starting_point','Nantes','avatar_url','javascript:alert(1)')); IF (r->>'ok')::boolean THEN RAISE EXCEPTION 'QA invalid photo accepted'; END IF;
+r:=campusride.api(jsonb_build_object('op','profile','token',a->>'token','request_id','valid-photo','name','QA-driver-'||n,'starting_point','Nantes','avatar_url','data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jE1sAAAAASUVORK5CYII=')); IF NOT (r->>'ok')::boolean OR r#>>'{data,profile,avatar_url}' IS NULL THEN RAISE EXCEPTION 'QA photo save failed: %',r; END IF;
+r:=campusride.api(jsonb_build_object('op','message','token',a->>'token','request_id','missing-trip','recipient_id',b#>>'{data,profile,id}','content','invalid')); IF (r->>'ok')::boolean THEN RAISE EXCEPTION 'QA missing trip accepted'; END IF;
+RAISE EXCEPTION 'QA_PASSED: photo validation and persistence, missing trip guard,  registration, login, publish, reserve, idempotency, capacity, authorization, messages, cancellation, freed seats, reviews, notifications, privacy, session. ALL TEST ROWS ROLLED BACK.';
 END $qa$;
