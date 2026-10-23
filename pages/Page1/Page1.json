@@ -4,7 +4,7 @@
     "layouts": [
       {
         "dsl": {
-          "backgroundColor": "none",
+          "backgroundColor": "#FFFFFF",
           "bottomRow": 870,
           "canExtend": true,
           "containerStyle": "none",
@@ -12,7 +12,7 @@
           "dynamicBindingPathList": [],
           "dynamicTriggerPathList": [],
           "leftColumn": 0,
-          "minHeight": 1292,
+          "minHeight": 0,
           "parentColumnSpace": 1,
           "parentRowSpace": 1,
           "rightColumn": 4896,
