@@ -1,1 +1,157 @@
-select table_name,column_name,is_identity,identity_generation from information_schema.columns where table_schema='public' and column_name='id' and table_name in ('users','carpools','bookings','messages');
+-- CampusRide MVP. Additive migration; no existing row or table is removed.
+BEGIN;
+SET LOCAL lock_timeout = '5s';
+CREATE SCHEMA IF NOT EXISTS campusride;
+REVOKE ALL ON SCHEMA campusride FROM PUBLIC, anon, authenticated;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS avatar_url text;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS notification_preferences jsonb NOT NULL DEFAULT '{"booking":true,"cancellation":true,"message":true}';
+ALTER TABLE public.carpools ADD COLUMN IF NOT EXISTS departure_at timestamptz;
+ALTER TABLE public.carpools ADD COLUMN IF NOT EXISTS arrival_at timestamptz;
+ALTER TABLE public.carpools ADD COLUMN IF NOT EXISTS seats_total integer CHECK (seats_total BETWEEN 1 AND 8);
+ALTER TABLE public.carpools ADD COLUMN IF NOT EXISTS price numeric(8,2) CHECK (price >= 0);
+ALTER TABLE public.carpools ADD COLUMN IF NOT EXISTS meeting_point text;
+ALTER TABLE public.carpools ADD COLUMN IF NOT EXISTS stops jsonb NOT NULL DEFAULT '[]';
+ALTER TABLE public.carpools ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'published' CHECK (status IN ('published','cancelled','completed'));
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'confirmed' CHECK (status IN ('confirmed','cancelled'));
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS cancelled_at timestamptz;
+ALTER TABLE public.messages ADD COLUMN IF NOT EXISTS carpool_id bigint REFERENCES public.carpools(id);
+ALTER TABLE public.messages ADD COLUMN IF NOT EXISTS read_at timestamptz;
+CREATE UNIQUE INDEX IF NOT EXISTS campusride_user_name ON public.users (lower(btrim(name)));
+CREATE UNIQUE INDEX IF NOT EXISTS campusride_active_booking ON public.bookings(carpools_id,passenger_id) WHERE status='confirmed';
+CREATE INDEX IF NOT EXISTS campusride_trip_search ON public.carpools(departure_at) WHERE status='published';
+CREATE INDEX IF NOT EXISTS campusride_trip_author ON public.carpools(author_id,departure_at);
+CREATE INDEX IF NOT EXISTS campusride_bookings_passenger ON public.bookings(passenger_id,carpools_id);
+CREATE INDEX IF NOT EXISTS campusride_messages_sender ON public.messages(sender_id,created_at);
+CREATE INDEX IF NOT EXISTS campusride_messages_recipient ON public.messages(recipient_id,created_at);
+CREATE INDEX IF NOT EXISTS campusride_messages_trip ON public.messages(carpool_id);
+CREATE TABLE IF NOT EXISTS campusride.credentials(user_id bigint PRIMARY KEY REFERENCES public.users(id), password_hash text NOT NULL);
+CREATE TABLE IF NOT EXISTS campusride.sessions(token_hash text PRIMARY KEY,user_id bigint NOT NULL REFERENCES public.users(id),expires_at timestamptz NOT NULL DEFAULT now()+interval '8 hours');
+CREATE INDEX IF NOT EXISTS sessions_user ON campusride.sessions(user_id);
+CREATE TABLE IF NOT EXISTS campusride.login_attempts(name text PRIMARY KEY,failures integer NOT NULL DEFAULT 0,window_start timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS campusride.notifications(id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,user_id bigint NOT NULL REFERENCES public.users(id),kind text NOT NULL,title text NOT NULL,body text NOT NULL,carpool_id bigint REFERENCES public.carpools(id),read_at timestamptz,created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS notifications_user ON campusride.notifications(user_id,created_at DESC);
+CREATE INDEX IF NOT EXISTS notifications_trip ON campusride.notifications(carpool_id);
+CREATE TABLE IF NOT EXISTS campusride.reviews(id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,carpool_id bigint NOT NULL REFERENCES public.carpools(id),author_id bigint NOT NULL REFERENCES public.users(id),recipient_id bigint NOT NULL REFERENCES public.users(id),rating integer NOT NULL CHECK(rating BETWEEN 1 AND 5),comment text NOT NULL DEFAULT '' CHECK(length(comment)<=2000),created_at timestamptz NOT NULL DEFAULT now(),UNIQUE(carpool_id,author_id,recipient_id),CHECK(author_id<>recipient_id));
+CREATE INDEX IF NOT EXISTS reviews_author ON campusride.reviews(author_id);
+CREATE INDEX IF NOT EXISTS reviews_recipient ON campusride.reviews(recipient_id);
+CREATE TABLE IF NOT EXISTS campusride.requests(user_id bigint NOT NULL REFERENCES public.users(id),request_id text NOT NULL,response jsonb NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(user_id,request_id));
+ALTER TABLE campusride.credentials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE campusride.sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE campusride.login_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE campusride.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE campusride.reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE campusride.requests ENABLE ROW LEVEL SECURITY;
+CREATE OR REPLACE FUNCTION campusride.snapshot(uid bigint) RETURNS jsonb LANGUAGE sql SECURITY INVOKER SET search_path='' AS $$
+SELECT jsonb_build_object(
+ 'profile',(SELECT jsonb_build_object('id',u.id,'name',u.name,'school',u.school,'starting_point',u.starting_point,'avatar_url',u.avatar_url,'preferences',u.notification_preferences) FROM public.users u WHERE u.id=uid),
+ 'trips',COALESCE((SELECT jsonb_agg(to_jsonb(t) ORDER BY t.departure_at) FROM (SELECT c.*,u.name AS driver_name,u.school AS driver_school, c.seats_total-(SELECT count(*) FROM public.bookings b WHERE b.carpools_id=c.id AND b.status='confirmed') AS seats_available FROM public.carpools c JOIN public.users u ON u.id=c.author_id WHERE c.departure_at IS NOT NULL AND (c.departure_at>=now() OR c.author_id=uid OR EXISTS(SELECT 1 FROM public.bookings b WHERE b.carpools_id=c.id AND b.passenger_id=uid AND b.status='confirmed')) ORDER BY c.departure_at DESC LIMIT 300)t),'[]'),
+ 'bookings',COALESCE((SELECT jsonb_agg(to_jsonb(t)) FROM (SELECT b.*,u.name AS passenger_name FROM public.bookings b JOIN public.users u ON u.id=b.passenger_id JOIN public.carpools c ON c.id=b.carpools_id WHERE b.passenger_id=uid OR c.author_id=uid)t),'[]'),
+ 'messages',COALESCE((SELECT jsonb_agg(to_jsonb(t) ORDER BY t.created_at) FROM (SELECT m.*,s.name AS sender_name,r.name AS recipient_name FROM public.messages m JOIN public.users s ON s.id=m.sender_id JOIN public.users r ON r.id=m.recipient_id WHERE m.sender_id=uid OR m.recipient_id=uid ORDER BY m.created_at DESC LIMIT 500)t),'[]'),
+ 'notifications',COALESCE((SELECT jsonb_agg(to_jsonb(t) ORDER BY t.created_at DESC) FROM (SELECT * FROM campusride.notifications n WHERE n.user_id=uid ORDER BY n.created_at DESC LIMIT 100)t),'[]'),
+ 'reviews',COALESCE((SELECT jsonb_agg(to_jsonb(t)) FROM (SELECT r.*,u.name AS author_name,v.name AS recipient_name FROM campusride.reviews r JOIN public.users u ON u.id=r.author_id JOIN public.users v ON v.id=r.recipient_id WHERE r.author_id=uid OR r.recipient_id=uid)t),'[]')
+);
+$$;
+CREATE OR REPLACE FUNCTION campusride.api(p jsonb) RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER SET search_path='' AS $$
+DECLARE op text:=COALESCE(p->>'op','ping'); uid bigint; tid bigint; bid bigint; other_id bigint; tok text; result jsonb; old_result jsonb; trip public.carpools%ROWTYPE; bk public.bookings%ROWTYPE; nm text; pw text; hash text; cnt integer; dt timestamptz; arr timestamptz; capacity integer; fare numeric; rid text:=p->>'request_id';
+BEGIN
+ IF op='ping' THEN RETURN jsonb_build_object('ok',true,'version','CampusRide MVP 2026-10-23'); END IF;
+ IF op IN ('register','login') THEN
+   nm:=btrim(COALESCE(p->>'name','')); pw:=COALESCE(p->>'password','');
+   IF length(nm)<2 OR length(nm)>100 THEN RETURN jsonb_build_object('ok',false,'error','Saisissez un nom de 2 à 100 caractères.'); END IF;
+   INSERT INTO campusride.login_attempts(name) VALUES(lower(nm)) ON CONFLICT DO NOTHING;
+   UPDATE campusride.login_attempts SET failures=0,window_start=now() WHERE name=lower(nm) AND window_start<now()-interval '15 minutes';
+   SELECT failures INTO cnt FROM campusride.login_attempts WHERE name=lower(nm) FOR UPDATE;
+   IF cnt>=5 THEN RETURN jsonb_build_object('ok',false,'error','Trop de tentatives. Réessayez dans 15 minutes.'); END IF;
+   IF op='register' THEN
+     IF length(pw)<10 OR octet_length(pw)>72 THEN RETURN jsonb_build_object('ok',false,'error','Choisissez un mot de passe de 10 à 72 caractères.'); END IF;
+     IF length(btrim(COALESCE(p->>'starting_point','')))<2 THEN RETURN jsonb_build_object('ok',false,'error','Indiquez votre lieu de départ habituel.'); END IF;
+     IF EXISTS(SELECT 1 FROM public.users WHERE lower(btrim(name))=lower(nm)) THEN RETURN jsonb_build_object('ok',false,'error','Ce nom est déjà utilisé. Choisissez un autre identifiant.'); END IF;
+     INSERT INTO public.users(name,password,school,starting_point) VALUES(nm,'!managed-by-campusride',left(COALESCE(p->>'school',''),150),left(btrim(p->>'starting_point'),300)) RETURNING id INTO uid;
+     INSERT INTO campusride.credentials VALUES(uid,extensions.crypt(pw,extensions.gen_salt('bf',10)));
+   ELSE
+     SELECT u.id,c.password_hash INTO uid,hash FROM public.users u JOIN campusride.credentials c ON c.user_id=u.id WHERE lower(btrim(u.name))=lower(nm);
+     IF uid IS NULL OR hash<>extensions.crypt(pw,hash) THEN
+       UPDATE campusride.login_attempts SET failures=failures+1 WHERE name=lower(nm);
+       RETURN jsonb_build_object('ok',false,'error','Nom ou mot de passe incorrect.');
+     END IF;
+   END IF;
+   UPDATE campusride.login_attempts SET failures=0 WHERE name=lower(nm);
+   tok:=encode(extensions.gen_random_bytes(32),'hex');
+   INSERT INTO campusride.sessions(token_hash,user_id) VALUES(encode(extensions.digest(tok,'sha256'),'hex'),uid);
+   RETURN jsonb_build_object('ok',true,'token',tok,'data',campusride.snapshot(uid));
+ END IF;
+ SELECT user_id INTO uid FROM campusride.sessions WHERE token_hash=encode(extensions.digest(COALESCE(p->>'token',''),'sha256'),'hex') AND expires_at>now();
+ IF uid IS NULL THEN RETURN jsonb_build_object('ok',false,'code','SESSION_EXPIRED','error','Votre session a expiré. Reconnectez-vous.'); END IF;
+ IF op='logout' THEN DELETE FROM campusride.sessions WHERE token_hash=encode(extensions.digest(p->>'token','sha256'),'hex'); RETURN jsonb_build_object('ok',true); END IF;
+ IF op='refresh' THEN RETURN jsonb_build_object('ok',true,'data',campusride.snapshot(uid)); END IF;
+ IF rid IS NULL OR length(rid)>100 THEN RAISE EXCEPTION 'Identifiant de requête manquant.'; END IF;
+ -- Serialize mutations from the same session owner; duplicate requests are harmless.
+ PERFORM pg_advisory_xact_lock(uid);
+ SELECT response INTO old_result FROM campusride.requests WHERE user_id=uid AND request_id=rid;
+ IF old_result IS NOT NULL THEN RETURN old_result; END IF;
+ IF op='publish' THEN
+   dt:=(p->>'departure_at')::timestamptz; arr:=NULLIF(p->>'arrival_at','')::timestamptz; capacity:=(p->>'seats_total')::integer; fare:=(p->>'price')::numeric;
+   IF dt IS NULL OR dt<=now() OR capacity IS NULL OR capacity NOT BETWEEN 1 AND 8 OR fare IS NULL OR fare<0 OR fare>9999 OR length(btrim(COALESCE(p->>'starting_point','')))<2 OR length(btrim(COALESCE(p->>'end_point','')))<2 OR lower(btrim(p->>'starting_point'))=lower(btrim(p->>'end_point')) THEN RAISE EXCEPTION 'Vérifiez les lieux, la date future, les places et le prix.'; END IF;
+   IF arr IS NOT NULL AND arr<=dt THEN RAISE EXCEPTION 'L’arrivée doit être après le départ.'; END IF;
+   IF jsonb_typeof(COALESCE(p->'stops','[]'))<>'array' OR jsonb_array_length(COALESCE(p->'stops','[]'))>5 THEN RAISE EXCEPTION 'Cinq étapes maximum.'; END IF;
+   INSERT INTO public.carpools(author_id,title,starting_point,end_point,departure_at,arrival_at,seats_total,price,meeting_point,stops) VALUES(uid,left(p->>'starting_point',200)||' → '||left(p->>'end_point',200),left(btrim(p->>'starting_point'),300),left(btrim(p->>'end_point'),300),dt,arr,capacity,fare,left(p->>'meeting_point',2000),COALESCE(p->'stops','[]')) RETURNING id INTO tid;
+ ELSIF op IN ('reserve','cancel_booking','cancel_trip','complete_trip','review') THEN
+   tid:=(p->>'trip_id')::bigint;
+   SELECT * INTO trip FROM public.carpools WHERE id=tid FOR UPDATE;
+   IF trip.id IS NULL THEN RAISE EXCEPTION 'Trajet introuvable.'; END IF;
+   IF op='reserve' THEN
+     IF trip.author_id=uid OR trip.status<>'published' OR trip.departure_at<=now() THEN RAISE EXCEPTION 'Ce trajet ne peut pas être réservé.'; END IF;
+     IF EXISTS(SELECT 1 FROM public.bookings WHERE carpools_id=tid AND passenger_id=uid AND status='confirmed') THEN RAISE EXCEPTION 'Vous avez déjà réservé ce trajet.'; END IF;
+     SELECT count(*) INTO cnt FROM public.bookings WHERE carpools_id=tid AND status='confirmed';
+     IF cnt>=trip.seats_total THEN RAISE EXCEPTION 'Ce trajet est complet.'; END IF;
+     INSERT INTO public.bookings(carpools_id,passenger_id) VALUES(tid,uid) RETURNING id INTO bid;
+     INSERT INTO campusride.notifications(user_id,kind,title,body,carpool_id) VALUES(trip.author_id,'booking','Nouvelle réservation',(SELECT name FROM public.users WHERE id=uid)||' a réservé une place.',tid),(uid,'booking','Réservation confirmée',trip.title,tid);
+   ELSIF op='cancel_booking' THEN
+     bid:=(p->>'booking_id')::bigint;
+     SELECT * INTO bk FROM public.bookings WHERE id=bid AND carpools_id=tid FOR UPDATE;
+     IF bk.id IS NULL OR (bk.passenger_id<>uid AND trip.author_id<>uid) OR trip.departure_at<=now() THEN RAISE EXCEPTION 'Annulation non autorisée.'; END IF;
+     UPDATE public.bookings SET status='cancelled',cancelled_at=now(),updated_at=now() WHERE id=bid AND status='confirmed';
+     IF FOUND THEN INSERT INTO campusride.notifications(user_id,kind,title,body,carpool_id) VALUES(CASE WHEN uid=trip.author_id THEN bk.passenger_id ELSE trip.author_id END,'cancellation','Réservation annulée',trip.title||' · une place a été libérée.',tid); END IF;
+   ELSIF op='cancel_trip' THEN
+     IF trip.author_id<>uid OR trip.departure_at<=now() THEN RAISE EXCEPTION 'Annulation non autorisée.'; END IF;
+     IF trip.status='published' THEN
+       INSERT INTO campusride.notifications(user_id,kind,title,body,carpool_id) SELECT passenger_id,'cancellation','Trajet annulé',trip.title,tid FROM public.bookings WHERE carpools_id=tid AND status='confirmed';
+       UPDATE public.bookings SET status='cancelled',cancelled_at=now(),updated_at=now() WHERE carpools_id=tid AND status='confirmed';
+       UPDATE public.carpools SET status='cancelled',updated_at=now() WHERE id=tid;
+     END IF;
+   ELSIF op='complete_trip' THEN
+     IF trip.author_id<>uid OR trip.status<>'published' OR COALESCE(trip.arrival_at,trip.departure_at)>now() THEN RAISE EXCEPTION 'Ce trajet ne peut pas être terminé.'; END IF;
+     UPDATE public.carpools SET status='completed',updated_at=now() WHERE id=tid;
+   ELSE
+     other_id:=(p->>'recipient_id')::bigint;
+     IF trip.status='cancelled' OR COALESCE(trip.arrival_at,trip.departure_at)>now() OR other_id=uid OR NOT ((trip.author_id=uid AND EXISTS(SELECT 1 FROM public.bookings WHERE carpools_id=tid AND passenger_id=other_id AND status='confirmed')) OR (trip.author_id=other_id AND EXISTS(SELECT 1 FROM public.bookings WHERE carpools_id=tid AND passenger_id=uid AND status='confirmed'))) THEN RAISE EXCEPTION 'Un avis nécessite un trajet effectué ensemble.'; END IF;
+     INSERT INTO campusride.reviews(carpool_id,author_id,recipient_id,rating,comment) VALUES(tid,uid,other_id,(p->>'rating')::integer,left(COALESCE(p->>'comment',''),2000));
+   END IF;
+ ELSIF op='message' THEN
+   tid:=(p->>'trip_id')::bigint; other_id:=(p->>'recipient_id')::bigint;
+   SELECT * INTO trip FROM public.carpools WHERE id=tid;
+   IF other_id=uid OR NOT EXISTS(SELECT 1 FROM public.users WHERE id=other_id) OR NOT (trip.author_id=other_id OR (trip.author_id=uid AND EXISTS(SELECT 1 FROM public.bookings WHERE carpools_id=tid AND passenger_id=other_id))) THEN RAISE EXCEPTION 'Destinataire non autorisé pour ce trajet.'; END IF;
+   IF length(btrim(COALESCE(p->>'content','')))=0 OR length(p->>'content')>2000 THEN RAISE EXCEPTION 'Saisissez un message de 1 à 2000 caractères.'; END IF;
+   INSERT INTO public.messages(sender_id,recipient_id,content,carpool_id) VALUES(uid,other_id,btrim(p->>'content'),tid);
+   INSERT INTO campusride.notifications(user_id,kind,title,body,carpool_id) VALUES(other_id,'message','Nouveau message',(SELECT name FROM public.users WHERE id=uid)||' vous a écrit.',tid);
+ ELSIF op='read_messages' THEN UPDATE public.messages SET read_at=now() WHERE recipient_id=uid AND sender_id=(p->>'sender_id')::bigint AND read_at IS NULL;
+ ELSIF op='read_notifications' THEN UPDATE campusride.notifications SET read_at=now() WHERE user_id=uid AND read_at IS NULL;
+ ELSIF op='profile' THEN
+   IF length(btrim(COALESCE(p->>'name','')))<2 OR length(btrim(COALESCE(p->>'starting_point','')))<2 THEN RAISE EXCEPTION 'Indiquez votre nom et votre lieu de départ.'; END IF;
+   UPDATE public.users SET name=left(btrim(p->>'name'),100),school=left(COALESCE(p->>'school',''),150),starting_point=left(btrim(p->>'starting_point'),300),updated_at=now() WHERE id=uid;
+ ELSIF op='preferences' THEN UPDATE public.users SET notification_preferences=jsonb_build_object('booking',COALESCE((p->>'booking')::boolean,true),'cancellation',COALESCE((p->>'cancellation')::boolean,true),'message',COALESCE((p->>'message')::boolean,true)),updated_at=now() WHERE id=uid;
+ ELSE RAISE EXCEPTION 'Action inconnue.';
+ END IF;
+ result:=jsonb_build_object('ok',true,'trip_id',tid,'data',campusride.snapshot(uid));
+ INSERT INTO campusride.requests(user_id,request_id,response) VALUES(uid,rid,result);
+ RETURN result;
+EXCEPTION WHEN unique_violation THEN RETURN jsonb_build_object('ok',false,'error','Cette opération existe déjà. Actualisez la page.');
+ WHEN invalid_text_representation OR datetime_field_overflow THEN RETURN jsonb_build_object('ok',false,'error','Vérifiez les dates et les valeurs saisies.');
+ WHEN raise_exception THEN RETURN jsonb_build_object('ok',false,'error',SQLERRM);
+END;
+$$;
+REVOKE ALL ON ALL TABLES IN SCHEMA campusride FROM PUBLIC,anon,authenticated;
+REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA campusride FROM PUBLIC,anon,authenticated;
+COMMENT ON SCHEMA campusride IS 'CampusRide MVP — private backend accessed by the existing Appsmith datasource; no public REST access';
+COMMIT;
+SELECT campusride.api('{"op":"ping"}'::jsonb) AS migration_result;
