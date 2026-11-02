@@ -10,4 +10,4 @@ Local browser fixture uses synthetic data and rejects every backend request; no 
 - 640 × 320 CSS px landscape: keyboard reaches bottom navigation, outer document scrolls (898px), no nested form scroll region.
 - JSX compiled using esbuild; strict frontend audit reports zero findings.
 
-Published verification is recorded separately after Appsmith imports the commit. Viewport values are measured from the DOM because the user's Appsmith browser zoom affects the emulation dimensions.
+Published: Appsmith imported commit `6d3d16e`. At 320 CSS px the widget width is 275px inside the host gutters; no horizontal overflow. Registration grows the iframe to 888px (matching its content), inputs are 16px, and the host SECTION scrolls. At 390 CSS px the page scroll width is also 390px. Registration screenshot: `outputs/campusride/responsive-mobile.jpg`. Signed-in results/publish screens were verified using the local synthetic fixture, not a production login. Viewport values are measured from the DOM because the user's Appsmith browser zoom affects the emulation dimensions.
