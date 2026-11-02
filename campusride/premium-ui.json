@@ -1,0 +1,12 @@
+{
+  "profile": "product-admin",
+  "sourceRoots": [
+    "."
+  ],
+  "locale": "fr-FR",
+  "canonicalMap": "UX-CONTRACT.md",
+  "ownership": {
+    "Date": "native",
+    "Select/Listbox": "native"
+  }
+}
