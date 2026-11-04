@@ -4,6 +4,7 @@
 - Search future published trips by departure, destination and date. Filter price, departure time and available seats. Empty results invite another search.
 - Publish future trips with capacity, price, optional arrival, meeting point and up to five stops. A successful response determines publication.
 - Reserve exactly one seat after confirmation. PostgreSQL locks the trip, rejects self-booking, duplicates and overbooking. The request identifier prevents duplicate writes.
+- Prepared November feedback: future published trips can be edited by their driver, with a version check and capacity at least equal to confirmed bookings. Search matches ordered intermediate stops and includes owned trips; an empty date includes all upcoming published trips chronologically. Notifications carry route/date/time, message previews and owned navigation targets. See CORRECTIONS-20261104.md for deployment state and remaining viewport-shell work.
 - Driver and passenger may cancel applicable future bookings. Driver may cancel the trip. Cancellation releases capacity and records notifications.
 - History shows past shared trips. A review requires participation, a past trip and a rating of one to five. One review per participant pair and trip.
 - Messages are scoped to the signed-in sender or recipient. Notifications and preferences belong to the signed-in user. Refresh buttons retrieve current data; no background push is promised.

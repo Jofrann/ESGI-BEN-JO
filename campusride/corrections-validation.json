@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-04",
+  "deployment": "not_applied_not_published",
+  "database": "isolated PostgreSQL17; approximation of legacy tables; no network",
+  "sql_original_qa": "QA_PASSED",
+  "sql_corrections_qa": "CORRECTIONS_QA_PASSED",
+  "sql_all_upcoming_results": 301,
+  "rolled_back_row_counts": {
+    "users": 0,
+    "trips": 0,
+    "bookings": 0,
+    "messages": 0,
+    "reviews": 0
+  },
+  "anon_execute_api": false,
+  "anon_select_notifications": false,
+  "route_tests_passed": 8,
+  "component_checks_passed": 12,
+  "component_scope": "React test renderer with mocked Appsmith bridge, no browser",
+  "jsx_build": "passed",
+  "browser_blocker": "Local browser use is disabled in Work settings",
+  "demo_rows_inserted": 0,
+  "remaining": [
+    "Appsmith outer-viewport shell and persistent bars",
+    "live schema comparison, application and end-to-end verification",
+    "user confirmation for demo data insertion"
+  ]
+}

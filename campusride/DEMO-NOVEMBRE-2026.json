@@ -1,0 +1,932 @@
+{
+  "version": 1,
+  "prepared_on": "2026-11-04",
+  "status": "prepared_only_not_inserted",
+  "scope": "CampusRide — données fictives de démonstration, novembre 2026",
+  "requires_user_confirmation_before_insert": true,
+  "authentication": {
+    "passwords_included": false,
+    "note": "Aucun secret ni hachage dans ce plan. Les identifiants devront être provisionnés séparément après autorisation."
+  },
+  "preservation": {
+    "existing_accounts_changed": false,
+    "existing_rows_deleted": false,
+    "existing_rows_modified": false,
+    "reuse_rule": "Clés de démonstration stables pour éviter les doublons ; ne jamais rapprocher un compte existant uniquement par un nom ressemblant."
+  },
+  "recurrence_note": "Les séries décrivent plusieurs trajets et réservations indépendants matérialisés dans le plan. Aucune réservation automatique récurrente n’est prétendue.",
+  "timezone": "Europe/Paris",
+  "counts": {
+    "accounts": 3,
+    "trips": 42,
+    "past_trips": 4,
+    "future_trips": 38,
+    "bookings": 9,
+    "reviews": 5
+  },
+  "usage_balance": [
+    {
+      "account_key": "demo_alice",
+      "driven_trips": 20,
+      "passenger_bookings": 3
+    },
+    {
+      "account_key": "demo_karim",
+      "driven_trips": 13,
+      "passenger_bookings": 4
+    },
+    {
+      "account_key": "demo_lea",
+      "driven_trips": 9,
+      "passenger_bookings": 2
+    }
+  ],
+  "accounts": [
+    {
+      "key": "demo_alice",
+      "name": "Démo — Alice Martin",
+      "school": "ESGI Nantes (démonstration)",
+      "starting_point": "Beaulieu",
+      "usage": "Conducteur ou conductrice principalement ; quelques réservations comme passager."
+    },
+    {
+      "key": "demo_karim",
+      "name": "Démo — Karim Benali",
+      "school": "ESGI Nantes (démonstration)",
+      "starting_point": "ESGI Nantes",
+      "usage": "Conducteur ou conductrice principalement ; quelques réservations comme passager."
+    },
+    {
+      "key": "demo_lea",
+      "name": "Démo — Léa Dubois",
+      "school": "ESGI Nantes (démonstration)",
+      "starting_point": "Commerce",
+      "usage": "Conducteur ou conductrice principalement ; quelques réservations comme passager."
+    }
+  ],
+  "trips": [
+    {
+      "key": "alice-2026-11-02",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-02T08:00:00+01:00",
+      "arrival_at": "2026-11-02T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "completed",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "karim-2026-11-02",
+      "driver_key": "demo_karim",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Porte de Vertou",
+      "departure_at": "2026-11-02T17:30:00+01:00",
+      "arrival_at": "2026-11-02T18:05:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "completed",
+      "demo_series_key": "karim-mon-wed-fri",
+      "demo_frequency_label": "Récurrent : lundi, mercredi et vendredi"
+    },
+    {
+      "key": "lea-past-2026-11-03",
+      "driver_key": "demo_lea",
+      "starting_point": "Commerce",
+      "end_point": "ESGI Nantes",
+      "departure_at": "2026-11-03T07:45:00+01:00",
+      "arrival_at": "2026-11-03T08:20:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "completed",
+      "demo_series_key": "past-review-example",
+      "demo_frequency_label": "Trajet passé pour tester les avis"
+    },
+    {
+      "key": "alice-2026-11-03",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-03T08:00:00+01:00",
+      "arrival_at": "2026-11-03T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "completed",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "lea-am-2026-11-05",
+      "driver_key": "demo_lea",
+      "starting_point": "Commerce",
+      "end_point": "ESGI Nantes",
+      "departure_at": "2026-11-05T07:45:00+01:00",
+      "arrival_at": "2026-11-05T08:20:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "lea-thursday-morning",
+      "demo_frequency_label": "Hebdomadaire : jeudi matin"
+    },
+    {
+      "key": "alice-2026-11-05",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-05T08:00:00+01:00",
+      "arrival_at": "2026-11-05T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "lea-pm-2026-11-05",
+      "driver_key": "demo_lea",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-05T18:15:00+01:00",
+      "arrival_at": "2026-11-05T18:50:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "lea-thursday-evening",
+      "demo_frequency_label": "Hebdomadaire : jeudi soir"
+    },
+    {
+      "key": "alice-2026-11-06",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-06T08:00:00+01:00",
+      "arrival_at": "2026-11-06T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "karim-2026-11-06",
+      "driver_key": "demo_karim",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Porte de Vertou",
+      "departure_at": "2026-11-06T17:30:00+01:00",
+      "arrival_at": "2026-11-06T18:05:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "karim-mon-wed-fri",
+      "demo_frequency_label": "Récurrent : lundi, mercredi et vendredi"
+    },
+    {
+      "key": "alice-2026-11-09",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-09T08:00:00+01:00",
+      "arrival_at": "2026-11-09T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "karim-2026-11-09",
+      "driver_key": "demo_karim",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Porte de Vertou",
+      "departure_at": "2026-11-09T17:30:00+01:00",
+      "arrival_at": "2026-11-09T18:05:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "karim-mon-wed-fri",
+      "demo_frequency_label": "Récurrent : lundi, mercredi et vendredi"
+    },
+    {
+      "key": "alice-2026-11-10",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-10T08:00:00+01:00",
+      "arrival_at": "2026-11-10T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "alice-2026-11-11",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-11T08:00:00+01:00",
+      "arrival_at": "2026-11-11T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "karim-2026-11-11",
+      "driver_key": "demo_karim",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Porte de Vertou",
+      "departure_at": "2026-11-11T17:30:00+01:00",
+      "arrival_at": "2026-11-11T18:05:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "karim-mon-wed-fri",
+      "demo_frequency_label": "Récurrent : lundi, mercredi et vendredi"
+    },
+    {
+      "key": "lea-am-2026-11-12",
+      "driver_key": "demo_lea",
+      "starting_point": "Commerce",
+      "end_point": "ESGI Nantes",
+      "departure_at": "2026-11-12T07:45:00+01:00",
+      "arrival_at": "2026-11-12T08:20:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "lea-thursday-morning",
+      "demo_frequency_label": "Hebdomadaire : jeudi matin"
+    },
+    {
+      "key": "alice-2026-11-12",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-12T08:00:00+01:00",
+      "arrival_at": "2026-11-12T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "joliverie-2026-11-12",
+      "driver_key": "demo_karim",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Porte de Vertou",
+      "departure_at": "2026-11-12T17:30:00+01:00",
+      "arrival_at": "2026-11-12T18:05:00+01:00",
+      "stops": [
+        {
+          "place": "Joliverie",
+          "time": "17:45"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "joliverie-thursday-example",
+      "demo_frequency_label": "Exemple avec étape intermédiaire recherchable"
+    },
+    {
+      "key": "lea-pm-2026-11-12",
+      "driver_key": "demo_lea",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-12T18:15:00+01:00",
+      "arrival_at": "2026-11-12T18:50:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "lea-thursday-evening",
+      "demo_frequency_label": "Hebdomadaire : jeudi soir"
+    },
+    {
+      "key": "alice-2026-11-13",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-13T08:00:00+01:00",
+      "arrival_at": "2026-11-13T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "karim-2026-11-13",
+      "driver_key": "demo_karim",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Porte de Vertou",
+      "departure_at": "2026-11-13T17:30:00+01:00",
+      "arrival_at": "2026-11-13T18:05:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "karim-mon-wed-fri",
+      "demo_frequency_label": "Récurrent : lundi, mercredi et vendredi"
+    },
+    {
+      "key": "alice-2026-11-16",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-16T08:00:00+01:00",
+      "arrival_at": "2026-11-16T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "karim-2026-11-16",
+      "driver_key": "demo_karim",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Porte de Vertou",
+      "departure_at": "2026-11-16T17:30:00+01:00",
+      "arrival_at": "2026-11-16T18:05:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "karim-mon-wed-fri",
+      "demo_frequency_label": "Récurrent : lundi, mercredi et vendredi"
+    },
+    {
+      "key": "alice-2026-11-17",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-17T08:00:00+01:00",
+      "arrival_at": "2026-11-17T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "alice-2026-11-18",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-18T08:00:00+01:00",
+      "arrival_at": "2026-11-18T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "karim-2026-11-18",
+      "driver_key": "demo_karim",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Porte de Vertou",
+      "departure_at": "2026-11-18T17:30:00+01:00",
+      "arrival_at": "2026-11-18T18:05:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "karim-mon-wed-fri",
+      "demo_frequency_label": "Récurrent : lundi, mercredi et vendredi"
+    },
+    {
+      "key": "lea-am-2026-11-19",
+      "driver_key": "demo_lea",
+      "starting_point": "Commerce",
+      "end_point": "ESGI Nantes",
+      "departure_at": "2026-11-19T07:45:00+01:00",
+      "arrival_at": "2026-11-19T08:20:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "lea-thursday-morning",
+      "demo_frequency_label": "Hebdomadaire : jeudi matin"
+    },
+    {
+      "key": "alice-2026-11-19",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-19T08:00:00+01:00",
+      "arrival_at": "2026-11-19T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "lea-pm-2026-11-19",
+      "driver_key": "demo_lea",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-19T18:15:00+01:00",
+      "arrival_at": "2026-11-19T18:50:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "lea-thursday-evening",
+      "demo_frequency_label": "Hebdomadaire : jeudi soir"
+    },
+    {
+      "key": "alice-2026-11-20",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-20T08:00:00+01:00",
+      "arrival_at": "2026-11-20T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "karim-2026-11-20",
+      "driver_key": "demo_karim",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Porte de Vertou",
+      "departure_at": "2026-11-20T17:30:00+01:00",
+      "arrival_at": "2026-11-20T18:05:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "karim-mon-wed-fri",
+      "demo_frequency_label": "Récurrent : lundi, mercredi et vendredi"
+    },
+    {
+      "key": "alice-2026-11-23",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-23T08:00:00+01:00",
+      "arrival_at": "2026-11-23T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "karim-2026-11-23",
+      "driver_key": "demo_karim",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Porte de Vertou",
+      "departure_at": "2026-11-23T17:30:00+01:00",
+      "arrival_at": "2026-11-23T18:05:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "karim-mon-wed-fri",
+      "demo_frequency_label": "Récurrent : lundi, mercredi et vendredi"
+    },
+    {
+      "key": "alice-2026-11-24",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-24T08:00:00+01:00",
+      "arrival_at": "2026-11-24T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "alice-2026-11-25",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-25T08:00:00+01:00",
+      "arrival_at": "2026-11-25T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "karim-2026-11-25",
+      "driver_key": "demo_karim",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Porte de Vertou",
+      "departure_at": "2026-11-25T17:30:00+01:00",
+      "arrival_at": "2026-11-25T18:05:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "karim-mon-wed-fri",
+      "demo_frequency_label": "Récurrent : lundi, mercredi et vendredi"
+    },
+    {
+      "key": "lea-am-2026-11-26",
+      "driver_key": "demo_lea",
+      "starting_point": "Commerce",
+      "end_point": "ESGI Nantes",
+      "departure_at": "2026-11-26T07:45:00+01:00",
+      "arrival_at": "2026-11-26T08:20:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "lea-thursday-morning",
+      "demo_frequency_label": "Hebdomadaire : jeudi matin"
+    },
+    {
+      "key": "alice-2026-11-26",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-26T08:00:00+01:00",
+      "arrival_at": "2026-11-26T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "lea-pm-2026-11-26",
+      "driver_key": "demo_lea",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-26T18:15:00+01:00",
+      "arrival_at": "2026-11-26T18:50:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "lea-thursday-evening",
+      "demo_frequency_label": "Hebdomadaire : jeudi soir"
+    },
+    {
+      "key": "alice-2026-11-27",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-27T08:00:00+01:00",
+      "arrival_at": "2026-11-27T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "karim-2026-11-27",
+      "driver_key": "demo_karim",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Porte de Vertou",
+      "departure_at": "2026-11-27T17:30:00+01:00",
+      "arrival_at": "2026-11-27T18:05:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "karim-mon-wed-fri",
+      "demo_frequency_label": "Récurrent : lundi, mercredi et vendredi"
+    },
+    {
+      "key": "alice-2026-11-30",
+      "driver_key": "demo_alice",
+      "starting_point": "Beaulieu",
+      "end_point": "Commerce",
+      "departure_at": "2026-11-30T08:00:00+01:00",
+      "arrival_at": "2026-11-30T08:30:00+01:00",
+      "stops": [
+        {
+          "place": "Duchesse Anne",
+          "time": "08:15"
+        }
+      ],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "alice-weekday-morning",
+      "demo_frequency_label": "Quotidien en semaine"
+    },
+    {
+      "key": "karim-2026-11-30",
+      "driver_key": "demo_karim",
+      "starting_point": "ESGI Nantes",
+      "end_point": "Porte de Vertou",
+      "departure_at": "2026-11-30T17:30:00+01:00",
+      "arrival_at": "2026-11-30T18:05:00+01:00",
+      "stops": [],
+      "seats_total": 3,
+      "price_eur": 2.5,
+      "meeting_point": "Point de rendez-vous fictif pour la démonstration ; ne pas utiliser pour un trajet réel.",
+      "status": "published",
+      "demo_series_key": "karim-mon-wed-fri",
+      "demo_frequency_label": "Récurrent : lundi, mercredi et vendredi"
+    }
+  ],
+  "bookings": [
+    {
+      "key": "karim-daily-2",
+      "trip_key": "alice-2026-11-02",
+      "passenger_key": "demo_karim",
+      "status": "confirmed",
+      "demo_series_key": "karim-alice-daily",
+      "demo_frequency_label": "Réservations quotidiennes : trajets matérialisés distincts"
+    },
+    {
+      "key": "karim-daily-3",
+      "trip_key": "alice-2026-11-03",
+      "passenger_key": "demo_karim",
+      "status": "confirmed",
+      "demo_series_key": "karim-alice-daily",
+      "demo_frequency_label": "Réservations quotidiennes : trajets matérialisés distincts"
+    },
+    {
+      "key": "karim-daily-5",
+      "trip_key": "alice-2026-11-05",
+      "passenger_key": "demo_karim",
+      "status": "confirmed",
+      "demo_series_key": "karim-alice-daily",
+      "demo_frequency_label": "Réservations quotidiennes : trajets matérialisés distincts"
+    },
+    {
+      "key": "karim-daily-6",
+      "trip_key": "alice-2026-11-06",
+      "passenger_key": "demo_karim",
+      "status": "confirmed",
+      "demo_series_key": "karim-alice-daily",
+      "demo_frequency_label": "Réservations quotidiennes : trajets matérialisés distincts"
+    },
+    {
+      "key": "alice-past-lea",
+      "trip_key": "lea-past-2026-11-03",
+      "passenger_key": "demo_alice",
+      "status": "confirmed",
+      "demo_series_key": "past-review-example",
+      "demo_frequency_label": "Réservation passée pour les avis"
+    },
+    {
+      "key": "alice-weekly-9",
+      "trip_key": "karim-2026-11-09",
+      "passenger_key": "demo_alice",
+      "status": "confirmed",
+      "demo_series_key": "alice-karim-mondays",
+      "demo_frequency_label": "Réservations hebdomadaires : deux lundis"
+    },
+    {
+      "key": "alice-weekly-16",
+      "trip_key": "karim-2026-11-16",
+      "passenger_key": "demo_alice",
+      "status": "confirmed",
+      "demo_series_key": "alice-karim-mondays",
+      "demo_frequency_label": "Réservations hebdomadaires : deux lundis"
+    },
+    {
+      "key": "lea-recurring-12",
+      "trip_key": "alice-2026-11-12",
+      "passenger_key": "demo_lea",
+      "status": "confirmed",
+      "demo_series_key": "lea-alice-thursdays",
+      "demo_frequency_label": "Réservations récurrentes : deux jeudis"
+    },
+    {
+      "key": "lea-recurring-19",
+      "trip_key": "alice-2026-11-19",
+      "passenger_key": "demo_lea",
+      "status": "confirmed",
+      "demo_series_key": "lea-alice-thursdays",
+      "demo_frequency_label": "Réservations récurrentes : deux jeudis"
+    }
+  ],
+  "reviews": [
+    {
+      "trip_key": "alice-2026-11-02",
+      "author_key": "demo_karim",
+      "recipient_key": "demo_alice",
+      "rating": 5,
+      "comment": "Avis fictif de démonstration : trajet du matin agréable et ponctuel."
+    },
+    {
+      "trip_key": "alice-2026-11-02",
+      "author_key": "demo_alice",
+      "recipient_key": "demo_karim",
+      "rating": 5,
+      "comment": "Avis fictif de démonstration : passager ponctuel au rendez-vous."
+    },
+    {
+      "trip_key": "alice-2026-11-03",
+      "author_key": "demo_karim",
+      "recipient_key": "demo_alice",
+      "rating": 4,
+      "comment": "Avis fictif de démonstration : bon échange avant le départ."
+    },
+    {
+      "trip_key": "lea-past-2026-11-03",
+      "author_key": "demo_alice",
+      "recipient_key": "demo_lea",
+      "rating": 5,
+      "comment": "Avis fictif de démonstration : arrivée au campus à l’heure."
+    },
+    {
+      "trip_key": "lea-past-2026-11-03",
+      "author_key": "demo_lea",
+      "recipient_key": "demo_alice",
+      "rating": 4,
+      "comment": "Avis fictif de démonstration : rendez-vous facile à trouver."
+    }
+  ],
+  "validation_scenarios": [
+    {
+      "case": "intermediate-stop-search",
+      "date": "2026-11-12",
+      "from": "Joliverie",
+      "to": "Porte de Vertou",
+      "expected_trip_key": "joliverie-2026-11-12"
+    },
+    {
+      "case": "empty-date-search",
+      "expected": "Tous les trajets futurs correspondants, triés du plus proche au plus éloigné."
+    },
+    {
+      "case": "past-review",
+      "expected": "Trajets des 2 et 3 novembre : avis entre participants confirmés, avec rejet des avis futurs et doublons."
+    }
+  ]
+}
