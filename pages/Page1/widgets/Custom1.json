@@ -5,7 +5,7 @@
   "borderWidth": "0",
   "bottomRow": 77,
   "boxShadow": "none",
-  "defaultModel": "{{ { response: appsmith.store.campusResponse || null } }}",
+  "defaultModel": "{{ { response: appsmith.store.campusResponse || null, viewport: { height: appsmith.ui.height, width: appsmith.ui.width } } }}",
   "dynamicBindingPathList": [
     {
       "key": "defaultModel"
