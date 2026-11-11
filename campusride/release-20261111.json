@@ -7,11 +7,14 @@
     "demo": {
       "accounts": 3,
       "trips": 59,
-      "bookings": 11,
-      "reviews": 4,
+      "bookings": 12,
+      "reviews": 5,
       "from": "2026-11-11",
       "through": "2026-12-20",
-      "weekdays_only": true
+      "weekdays_only": true,
+      "seeded_reviews": 4,
+      "review_added_through_ui": 1,
+      "messages_added_through_ui": 1
     },
     "preservation_checks": {
       "existing_users": true,
@@ -21,18 +24,54 @@
     },
     "calendar_valid": true,
     "reviews_eligible": true,
-    "anon_demo_access_revoked": true
+    "anon_demo_access_revoked": true,
+    "total_rows": {
+      "users": 9,
+      "trips": 60,
+      "bookings": 13,
+      "messages": 3,
+      "reviews": 5
+    }
   },
   "appsmith": {
-    "publication": "pending",
+    "publication": "published and tested",
     "backup_export": "local private backup retained, not committed",
     "unpublished_delta_reviewed": true,
     "permanent_bars": "unsupported in current classic Free custom widget; unresolved",
-    "scroll": "AUTO_HEIGHT host scroll retained; no fixed phone height"
+    "scroll": "AUTO_HEIGHT host scroll retained; no fixed phone height",
+    "published_source_commit": "86db398",
+    "published_and_unpublished_source_match_tested_build": true,
+    "live_url": "https://jo-ben.appsmith.com/app/campusride/page1-6aabbe1923246bf3eb399479?branch=master"
   },
   "local_tests": {
     "route_cases": 8,
     "component_cases": 12,
     "seed_repeated_idempotently": true
-  }
+  },
+  "live_browser_checks": {
+    "existing_Benjamin_login": true,
+    "all_three_demo_logins": true,
+    "intermediate_stop_Joliverie_Nov12": true,
+    "no_date_results": 58,
+    "results_chronological": true,
+    "future_owned_trip_edit": true,
+    "trip_edit_preserves_passengers": true,
+    "message_sent": true,
+    "message_notification_has_preview_route_date_and_time": true,
+    "message_notification_opens_conversation": true,
+    "trip_notification_opens_trip": true,
+    "confirmation_return_label": true,
+    "review_written_after_completed_trip": true,
+    "pending_review_available_to_Alice_for_Lea": true,
+    "mobile_css_widths": [
+      320,
+      390
+    ],
+    "horizontal_overflow_observed": false,
+    "single_scroll_css_main": "visible",
+    "screenshot": "Unavailable: documented screenshot API timed out twice; native app inventory also unavailable"
+  },
+  "remaining": [
+    "Permanent top/bottom bars and composer anchored to host viewport unavailable in current classic Free Appsmith widget."
+  ]
 }

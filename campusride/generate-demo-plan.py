@@ -93,11 +93,18 @@ def prepare(start: date, end: date, now: datetime) -> dict:
     if start.weekday() < 5:
         book("lea-launch-" + start.isoformat(), "demo_alice", "launch-review-example", "Exemple de démarrage")
 
+    # Leave one valid participant pair without seeded reviews so the real UI can be tested.
+    pending_trip_key = "alice-2026-11-11"
+    if any(trip["key"] == pending_trip_key for trip in trips):
+        book(pending_trip_key, "demo_lea", "pending-review-example", "Réservation pour tester la rédaction d’un avis")
+        bookings[-1]["seed_reviews"] = False
+        bookings[-1]["purpose"] = "Conserver les deux avis Alice/Léa non rédigés pour vérification dans l’application."
+
     by_trip = {trip["key"]: trip for trip in trips}
     reviews: list[dict] = []
     for booking in bookings:
         trip = by_trip[booking["trip_key"]]
-        if trip["status"] != "completed":
+        if trip["status"] != "completed" or booking.get("seed_reviews") is False:
             continue
         for author, recipient, rating, comment in (
             (booking["passenger_key"], trip["driver_key"], 5, "Trajet ponctuel et rendez-vous facile à trouver."),
@@ -132,6 +139,9 @@ def prepare(start: date, end: date, now: datetime) -> dict:
              "date": "2026-11-12", "expected_trip_key": "joliverie-2026-11-12"},
             {"case": "empty-date-search", "expected": "Tous les trajets futurs correspondants, du plus proche au plus éloigné."},
             {"case": "reviews", "expected": "Avis des seuls participants confirmés après l’arrivée réelle ; futur et doublon refusés."},
+            {"case": "pending-review", "trip_key": pending_trip_key,
+             "participants": ["demo_alice", "demo_lea"],
+             "expected": "Réservation confirmée et aucun avis prérempli pour ce duo. Après l’arrivée réelle, Léa peut rédiger son avis sur Alice ; le retour Alice vers Léa reste également disponible."},
         ],
     }
 
@@ -165,6 +175,12 @@ def validate(plan: dict, now: datetime) -> dict:
         assert any(booking["trip_key"] == trip["key"]
                    and {trip["driver_key"], booking["passenger_key"]} == {review["author_key"], review["recipient_key"]}
                    for booking in plan["bookings"]), "Ineligible review participants"
+    for booking in plan["bookings"]:
+        if booking.get("seed_reviews") is False:
+            driver = by_trip[booking["trip_key"]]["driver_key"]
+            assert not any(review["trip_key"] == booking["trip_key"]
+                           and {review["author_key"], review["recipient_key"]} == {driver, booking["passenger_key"]}
+                           for review in plan["reviews"]), "Pending review pair was prefilled"
     assert all(item["driven_trips"] > item["passenger_bookings"] for item in plan["usage_balance"]), "Account is not predominantly a driver"
     serialized = json.dumps(plan, ensure_ascii=False).lower()
     assert '"password"' not in serialized and '"password_hash"' not in serialized and '"token"' not in serialized, "Credential material present"

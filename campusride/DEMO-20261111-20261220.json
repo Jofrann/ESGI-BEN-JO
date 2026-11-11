@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "prepared_at": "2026-11-11T14:39:00+01:00",
+  "prepared_at": "2026-11-11T14:55:17+01:00",
   "status": "prepared_only_not_inserted",
   "scope": "CampusRide — données fictives de démonstration",
   "timezone": "Europe/Paris",
@@ -26,7 +26,7 @@
     "trips": 59,
     "past_trips": 2,
     "future_or_in_progress_trips": 57,
-    "bookings": 11,
+    "bookings": 12,
     "reviews": 4
   },
   "usage_balance": [
@@ -43,7 +43,7 @@
     {
       "account_key": "demo_lea",
       "driven_trips": 13,
-      "passenger_bookings": 3
+      "passenger_bookings": 4
     }
   ],
   "accounts": [
@@ -1189,6 +1189,16 @@
       "status": "confirmed",
       "demo_series_key": "launch-review-example",
       "demo_frequency_label": "Exemple de démarrage"
+    },
+    {
+      "key": "demo_lea-alice-2026-11-11",
+      "trip_key": "alice-2026-11-11",
+      "passenger_key": "demo_lea",
+      "status": "confirmed",
+      "demo_series_key": "pending-review-example",
+      "demo_frequency_label": "Réservation pour tester la rédaction d’un avis",
+      "seed_reviews": false,
+      "purpose": "Conserver les deux avis Alice/Léa non rédigés pour vérification dans l’application."
     }
   ],
   "reviews": [
@@ -1240,6 +1250,15 @@
     {
       "case": "reviews",
       "expected": "Avis des seuls participants confirmés après l’arrivée réelle ; futur et doublon refusés."
+    },
+    {
+      "case": "pending-review",
+      "trip_key": "alice-2026-11-11",
+      "participants": [
+        "demo_alice",
+        "demo_lea"
+      ],
+      "expected": "Réservation confirmée et aucun avis prérempli pour ce duo. Après l’arrivée réelle, Léa peut rédiger son avis sur Alice ; le retour Alice vers Léa reste également disponible."
     }
   ],
   "validation": {

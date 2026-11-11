@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-11",
+  "scope": "Local build and mocked component tests only. No live browser, production SQL, git commit or push performed by this agent. Permanent host-viewport bars remain unresolved on classic Free Appsmith.",
+  "results": {
+    "build": {
+      "exit_code": 0,
+      "stdout": "Widget ESM build passed",
+      "stderr": ""
+    },
+    "routes": {
+      "exit_code": 0,
+      "stdout": "Route matching: 8 ordered route / stop cases passed.",
+      "stderr": ""
+    },
+    "components": {
+      "exit_code": 0,
+      "stdout": "{\"ok\":true,\"checks\":12,\"scope\":\"React component / mocked bridge only\",\"cases\":[\"login fixture\",\"prefilled trip edit\",\"version stamp\",\"failure retains input\",\"unsaved confirmation\",\"edit success\",\"intermediate search including own trips\",\"message notification target\",\"legacy booking target\",\"modal return label\"]}",
+      "stderr": ""
+    }
+  },
+  "sha256": {
+    "outputs/campusride/widget.jsx": "52577955f20480f28fe9540c9f02b4b28821306619054ccfd0c323d6188b1531",
+    "outputs/campusride/widget.css": "4a67f5486893d198c56d20a84c13199e15c00ed9bbf2ba36792eb043aacd199c",
+    "outputs/campusride/widget.js": "570c9575dfb049d9c189c262f652cfe3395fadbfda5029d13b85369f55c4f9d9"
+  }
+}

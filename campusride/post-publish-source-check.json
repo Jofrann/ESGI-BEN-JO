@@ -1,0 +1,97 @@
+{
+  "date": "2026-11-11",
+  "scope": "Read-only Git/source verification; no browser or live backend action by this reviewer.",
+  "base_commit": "60d8390a413d3b5c300b3b36f2d0e6a74741ecd6",
+  "published_commit": "86db398dfeb7f051312e0d72602dfd4df93b11f8",
+  "changed_files": [
+    "pages/Page1/widgets/Custom1.json"
+  ],
+  "widget_semantic_changes": [],
+  "numeric_serialization_only": [
+    {
+      "path": "/bottomRow",
+      "before": 77.0,
+      "after": 77,
+      "note": "equal numeric value, serialization type normalized"
+    },
+    {
+      "path": "/originalBottomRow",
+      "before": 77.0,
+      "after": 77,
+      "note": "equal numeric value, serialization type normalized"
+    },
+    {
+      "path": "/originalTopRow",
+      "before": 0.0,
+      "after": 0,
+      "note": "equal numeric value, serialization type normalized"
+    }
+  ],
+  "object_key_order_changed": [
+    "/",
+    "/srcDoc",
+    "/uncompiledSrcDoc"
+  ],
+  "source_checks": {
+    "srcDoc.js": {
+      "unchanged_between_commits": true,
+      "matches_current_tested_source": true,
+      "sha256": "570c9575dfb049d9c189c262f652cfe3395fadbfda5029d13b85369f55c4f9d9"
+    },
+    "srcDoc.css": {
+      "unchanged_between_commits": true,
+      "matches_current_tested_source": true,
+      "sha256": "cde39ca5846a9af751ea8e3f2e286a4640175b21b8cdc9e929d92f1fa67f67ae"
+    },
+    "uncompiledSrcDoc.js": {
+      "unchanged_between_commits": true,
+      "matches_current_tested_source": true,
+      "sha256": "9916b9b6c60f31ed8b6614f64cca2d1de60b8cc41901081ddc6928090bfdb253"
+    },
+    "uncompiledSrcDoc.css": {
+      "unchanged_between_commits": true,
+      "matches_current_tested_source": true,
+      "sha256": "cde39ca5846a9af751ea8e3f2e286a4640175b21b8cdc9e929d92f1fa67f67ae"
+    }
+  },
+  "invariants": {
+    "dynamic_bindings": [
+      {
+        "key": "defaultModel"
+      }
+    ],
+    "height_mode": "AUTO_HEIGHT",
+    "widget_width_columns": [
+      0,
+      64
+    ]
+  },
+  "conclusion": "PASS: only Appsmith serialization normalization and key ordering; no semantic widget or application source change.",
+  "limitations": [
+    "Permanent outer-viewport bars are not proved or fixed by this source comparison.",
+    "Runtime business tests reported by the parent agent are separate from this read-only source evidence."
+  ],
+  "recorded_build_evidence": {
+    "path": "work/release-20261111/frontend-validation.json",
+    "all_artifact_hashes_still_match": true,
+    "build_exit_code": 0,
+    "routes_exit_code": 0,
+    "components": {
+      "ok": true,
+      "checks": 12,
+      "scope": "React component / mocked bridge only",
+      "cases": [
+        "login fixture",
+        "prefilled trip edit",
+        "version stamp",
+        "failure retains input",
+        "unsaved confirmation",
+        "edit success",
+        "intermediate search including own trips",
+        "message notification target",
+        "legacy booking target",
+        "modal return label"
+      ]
+    }
+  }
+}
