@@ -3,19 +3,10 @@
   "borderColor": "#E0DEDE",
   "borderRadius": "0",
   "borderWidth": "0",
-  "bottomRow": 80,
+  "bottomRow": 77.0,
   "boxShadow": "none",
   "defaultModel": "{{ { response: appsmith.store.campusResponse || null } }}",
   "dynamicBindingPathList": [
-    {
-      "key": "theme"
-    },
-    {
-      "key": "borderRadius"
-    },
-    {
-      "key": "boxShadow"
-    },
     {
       "key": "defaultModel"
     }
@@ -63,5 +54,7 @@
   },
   "version": 1,
   "widgetId": "w3t1h3rrsq",
-  "widgetName": "Custom1"
+  "widgetName": "Custom1",
+  "originalBottomRow": 77.0,
+  "originalTopRow": 0.0
 }

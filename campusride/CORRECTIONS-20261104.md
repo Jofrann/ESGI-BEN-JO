@@ -1,6 +1,6 @@
 # Corrections des retours du 4 novembre 2026
 
-État : préparées et testées localement, **non appliquées à Supabase et non publiées dans Appsmith**.
+État historique au 4 novembre : préparées et testées localement. La reprise du 11 novembre, l’application à Supabase et le nouveau jeu fictif sont suivis dans RELEASE-20261111.md et release-20261111.json.
 
 Sources : PDF d’une page reçu le 4 novembre et capture de la discussion. Les éléments relatifs au dossier de cours, à la notation et à la présentation sont exclus.
 

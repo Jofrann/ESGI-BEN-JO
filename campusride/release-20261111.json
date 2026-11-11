@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-11",
+  "project_ref": "hsnzrpcficwwmyezdjsj",
+  "database": {
+    "corrections_applied": true,
+    "live_api_diff_from_base": "whitespace only",
+    "demo": {
+      "accounts": 3,
+      "trips": 59,
+      "bookings": 11,
+      "reviews": 4,
+      "from": "2026-11-11",
+      "through": "2026-12-20",
+      "weekdays_only": true
+    },
+    "preservation_checks": {
+      "existing_users": true,
+      "existing_trips": true,
+      "existing_bookings": true,
+      "existing_messages": true
+    },
+    "calendar_valid": true,
+    "reviews_eligible": true,
+    "anon_demo_access_revoked": true
+  },
+  "appsmith": {
+    "publication": "pending",
+    "backup_export": "local private backup retained, not committed",
+    "unpublished_delta_reviewed": true,
+    "permanent_bars": "unsupported in current classic Free custom widget; unresolved",
+    "scroll": "AUTO_HEIGHT host scroll retained; no fixed phone height"
+  },
+  "local_tests": {
+    "route_cases": 8,
+    "component_cases": 12,
+    "seed_repeated_idempotently": true
+  }
+}

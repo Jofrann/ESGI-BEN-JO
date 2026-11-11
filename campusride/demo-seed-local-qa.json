@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "environment": "isolated Docker PostgreSQL 17, no published port",
+  "production_access": false,
+  "counts_first_run": {
+    "trip": 59,
+    "review": 4,
+    "account": 3,
+    "booking": 11
+  },
+  "counts_second_run": {
+    "trip": 59,
+    "review": 4,
+    "account": 3,
+    "booking": 11
+  },
+  "idempotent": true,
+  "missing_hash_rejected_atomically": true,
+  "existing_benjamin_patrick_activity_unchanged": true,
+  "credentials_used": "random local-only fixture values; not stored",
+  "checks": {
+    "api_denied": true,
+    "reviews_past": true,
+    "window_valid": true,
+    "no_overbooking": true,
+    "reviews_eligible": true,
+    "demo_names_marked": true,
+    "mapping_anon_denied": true,
+    "mapping_rls_enabled": true,
+    "private_schema_denied": true,
+    "mapping_authenticated_denied": true
+  }
+}
