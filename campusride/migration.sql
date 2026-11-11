@@ -31,15 +31,32 @@ CREATE TABLE IF NOT EXISTS campusride.login_attempts(name text PRIMARY KEY,failu
 CREATE TABLE IF NOT EXISTS campusride.notifications(id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,user_id bigint NOT NULL REFERENCES public.users(id),kind text NOT NULL,title text NOT NULL,body text NOT NULL,carpool_id bigint REFERENCES public.carpools(id),read_at timestamptz,created_at timestamptz NOT NULL DEFAULT now());
 CREATE INDEX IF NOT EXISTS notifications_user ON campusride.notifications(user_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS notifications_trip ON campusride.notifications(carpool_id);
-CREATE TABLE IF NOT EXISTS campusride.reviews(id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,carpool_id bigint NOT NULL REFERENCES public.carpools(id),author_id bigint NOT NULL REFERENCES public.users(id),recipient_id bigint NOT NULL REFERENCES public.users(id),rating integer NOT NULL CHECK(rating BETWEEN 1 AND 5),comment text NOT NULL DEFAULT '' CHECK(length(comment)<=2000),created_at timestamptz NOT NULL DEFAULT now(),UNIQUE(carpool_id,author_id,recipient_id),CHECK(author_id<>recipient_id));
-CREATE INDEX IF NOT EXISTS reviews_author ON campusride.reviews(author_id);
-CREATE INDEX IF NOT EXISTS reviews_recipient ON campusride.reviews(recipient_id);
+-- Existing installations must move their review table before this baseline is rerun.
+-- Refuse to create a second empty table and silently redirect the API away from data.
+DO $avis_existing_install_guard$
+BEGIN
+ IF to_regclass('campusride.reviews') IS NOT NULL THEN
+  RAISE EXCEPTION 'Existing campusride.reviews detected. Run avis-schema-20261111.sql first, then rerun this baseline migration.';
+ END IF;
+END $avis_existing_install_guard$;
+CREATE TABLE IF NOT EXISTS public.avis(id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,carpool_id bigint NOT NULL REFERENCES public.carpools(id),author_id bigint NOT NULL REFERENCES public.users(id),recipient_id bigint NOT NULL REFERENCES public.users(id),rating integer NOT NULL CHECK(rating BETWEEN 1 AND 5),comment text NOT NULL DEFAULT '' CHECK(length(comment)<=2000),created_at timestamptz NOT NULL DEFAULT now(),UNIQUE(carpool_id,author_id,recipient_id),CHECK(author_id<>recipient_id));
+CREATE INDEX IF NOT EXISTS reviews_author ON public.avis(author_id);
+CREATE INDEX IF NOT EXISTS reviews_recipient ON public.avis(recipient_id);
 CREATE TABLE IF NOT EXISTS campusride.requests(user_id bigint NOT NULL REFERENCES public.users(id),request_id text NOT NULL,response jsonb NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(user_id,request_id));
 ALTER TABLE campusride.credentials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE campusride.sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE campusride.login_attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE campusride.notifications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE campusride.reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.avis ENABLE ROW LEVEL SECURITY;
+-- This table is in an exposed schema: do not inherit Supabase's default grants.
+-- The existing server-side Appsmith datasource accesses it through campusride.api.
+REVOKE ALL ON TABLE public.avis FROM PUBLIC, anon, authenticated;
+DO $avis_sequence_privileges$
+DECLARE identity_sequence regclass := pg_get_serial_sequence('public.avis','id')::regclass;
+BEGIN
+ IF identity_sequence IS NULL THEN RAISE EXCEPTION 'public.avis.id must have its identity sequence'; END IF;
+ EXECUTE format('REVOKE ALL ON SEQUENCE %s FROM PUBLIC, anon, authenticated',identity_sequence);
+END $avis_sequence_privileges$;
 ALTER TABLE campusride.requests ENABLE ROW LEVEL SECURITY;
 CREATE OR REPLACE FUNCTION campusride.snapshot(uid bigint) RETURNS jsonb LANGUAGE sql SECURITY INVOKER SET search_path='' AS $$
 SELECT jsonb_build_object(
@@ -48,7 +65,7 @@ SELECT jsonb_build_object(
  'bookings',COALESCE((SELECT jsonb_agg(to_jsonb(t)) FROM (SELECT b.*,u.name AS passenger_name FROM public.bookings b JOIN public.users u ON u.id=b.passenger_id JOIN public.carpools c ON c.id=b.carpools_id WHERE b.passenger_id=uid OR c.author_id=uid)t),'[]'),
  'messages',COALESCE((SELECT jsonb_agg(to_jsonb(t) ORDER BY t.created_at) FROM (SELECT m.*,s.name AS sender_name,r.name AS recipient_name FROM public.messages m JOIN public.users s ON s.id=m.sender_id JOIN public.users r ON r.id=m.recipient_id WHERE m.sender_id=uid OR m.recipient_id=uid ORDER BY m.created_at DESC LIMIT 500)t),'[]'),
  'notifications',COALESCE((SELECT jsonb_agg(to_jsonb(t) ORDER BY t.created_at DESC) FROM (SELECT * FROM campusride.notifications n WHERE n.user_id=uid ORDER BY n.created_at DESC LIMIT 100)t),'[]'),
- 'reviews',COALESCE((SELECT jsonb_agg(to_jsonb(t)) FROM (SELECT r.*,u.name AS author_name,v.name AS recipient_name FROM campusride.reviews r JOIN public.users u ON u.id=r.author_id JOIN public.users v ON v.id=r.recipient_id WHERE r.author_id=uid OR r.recipient_id=uid)t),'[]')
+ 'reviews',COALESCE((SELECT jsonb_agg(to_jsonb(t)) FROM (SELECT r.*,u.name AS author_name,v.name AS recipient_name FROM public.avis r JOIN public.users u ON u.id=r.author_id JOIN public.users v ON v.id=r.recipient_id WHERE r.author_id=uid OR r.recipient_id=uid)t),'[]')
 );
 $$;
 CREATE OR REPLACE FUNCTION campusride.api(p jsonb) RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER SET search_path='' AS $$
@@ -125,7 +142,7 @@ BEGIN
    ELSE
      other_id:=(p->>'recipient_id')::bigint;
      IF trip.status='cancelled' OR COALESCE(trip.arrival_at,trip.departure_at)>now() OR other_id=uid OR NOT ((trip.author_id=uid AND EXISTS(SELECT 1 FROM public.bookings WHERE carpools_id=tid AND passenger_id=other_id AND status='confirmed')) OR (trip.author_id=other_id AND EXISTS(SELECT 1 FROM public.bookings WHERE carpools_id=tid AND passenger_id=uid AND status='confirmed'))) THEN RAISE EXCEPTION 'Un avis nécessite un trajet effectué ensemble.'; END IF;
-     INSERT INTO campusride.reviews(carpool_id,author_id,recipient_id,rating,comment) VALUES(tid,uid,other_id,(p->>'rating')::integer,left(COALESCE(p->>'comment',''),2000));
+     INSERT INTO public.avis(carpool_id,author_id,recipient_id,rating,comment) VALUES(tid,uid,other_id,(p->>'rating')::integer,left(COALESCE(p->>'comment',''),2000));
    END IF;
  ELSIF op='message' THEN
    tid:=(p->>'trip_id')::bigint; other_id:=(p->>'recipient_id')::bigint;

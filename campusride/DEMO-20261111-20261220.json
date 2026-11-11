@@ -26,7 +26,7 @@
     "trips": 59,
     "past_trips": 2,
     "future_or_in_progress_trips": 57,
-    "bookings": 12,
+    "bookings": 13,
     "reviews": 4
   },
   "usage_balance": [
@@ -38,7 +38,7 @@
     {
       "account_key": "demo_karim",
       "driven_trips": 18,
-      "passenger_bookings": 4
+      "passenger_bookings": 5
     },
     {
       "account_key": "demo_lea",
@@ -1199,6 +1199,16 @@
       "demo_frequency_label": "Réservation pour tester la rédaction d’un avis",
       "seed_reviews": false,
       "purpose": "Conserver les deux avis Alice/Léa non rédigés pour vérification dans l’application."
+    },
+    {
+      "key": "demo_karim-lea-launch-2026-11-11",
+      "trip_key": "lea-launch-2026-11-11",
+      "passenger_key": "demo_karim",
+      "status": "confirmed",
+      "demo_series_key": "teacher-pending-review-example",
+      "demo_frequency_label": "Réservation pour garder un test d’avis disponible",
+      "seed_reviews": false,
+      "purpose": "Garder les avis Karim/Léa non rédigés pour la démonstration et le test par l’enseignant."
     }
   ],
   "reviews": [
@@ -1259,6 +1269,15 @@
         "demo_lea"
       ],
       "expected": "Réservation confirmée et aucun avis prérempli pour ce duo. Après l’arrivée réelle, Léa peut rédiger son avis sur Alice ; le retour Alice vers Léa reste également disponible."
+    },
+    {
+      "case": "teacher-pending-review",
+      "trip_key": "lea-launch-2026-11-11",
+      "participants": [
+        "demo_karim",
+        "demo_lea"
+      ],
+      "expected": "Après l’arrivée réelle, Karim et Léa peuvent chacun rédiger un avis sur l’autre ; aucun de ces deux avis n’est prérempli."
     }
   ],
   "validation": {
