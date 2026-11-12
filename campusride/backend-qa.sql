@@ -12,7 +12,7 @@ BEGIN
  c:=campusride.api(jsonb_build_object('op','register','name','QA-third-'||n,'password',pw,'starting_point','Reze'));
  IF NOT (a->>'ok')::boolean OR NOT (b->>'ok')::boolean OR NOT (c->>'ok')::boolean THEN RAISE EXCEPTION 'QA register failed: % % %',a,b,c; END IF;
  r:=campusride.api(jsonb_build_object('op','login','name','QA-driver-'||n,'password',pw)); IF NOT (r->>'ok')::boolean THEN RAISE EXCEPTION 'QA login failed'; END IF;
- r:=campusride.api(jsonb_build_object('op','publish','token',a->>'token','request_id','publish','starting_point','Nantes','end_point','ESGI','departure_at',now()+interval '1 day','seats_total',1,'price',2));
+ r:=campusride.api(jsonb_build_object('op','publish','token',a->>'token','request_id','publish','starting_point','Nantes','end_point','ESGI','departure_at',now()+interval '1 day','arrival_at',now()+interval '1 day 1 hour','seats_total',1,'price',2));
  IF NOT (r->>'ok')::boolean THEN RAISE EXCEPTION 'QA publish failed: %',r; END IF; t:=(r->>'trip_id')::bigint;
  base:=jsonb_build_object('op','reserve','token',b->>'token','request_id','reserve','trip_id',t); r:=campusride.api(base); IF NOT (r->>'ok')::boolean THEN RAISE EXCEPTION 'QA reserve failed: %',r; END IF;
  r:=campusride.api(base); IF NOT (r->>'ok')::boolean OR (SELECT count(*) FROM public.bookings WHERE carpools_id=t)<>1 THEN RAISE EXCEPTION 'QA duplicate failed'; END IF;

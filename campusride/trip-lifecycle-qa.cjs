@@ -1,0 +1,27 @@
+// Specification-level schedule checks. No browser, database or application writes.
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const source=fs.readFileSync(path.join(__dirname,'widget.jsx'),'utf8');
+const helpers=source.slice(source.indexOf('function tripPhase('),source.indexOf('function useTripClock('));
+const {tripPhase,canReserveTrip,parseTripSchedule}=new Function(`${helpers};return {tripPhase,canReserveTrip,parseTripSchedule};`)();
+const departure=Date.parse('2026-11-12T12:00:00Z'),arrival=departure+3600000;
+const trip={status:'published',departure_at:'2026-11-12T12:00:00Z',arrival_at:'2026-11-12T13:00:00Z',seats_available:2};
+assert.equal(tripPhase(trip,departure-1),'upcoming');
+assert.equal(tripPhase(trip,departure),'in_progress');
+assert.equal(tripPhase(trip,arrival-1),'in_progress');
+assert.equal(tripPhase(trip,arrival),'completed');
+assert.equal(tripPhase({...trip,status:'cancelled'},arrival),'cancelled');
+assert.equal(tripPhase({...trip,status:'completed'},departure-1),'completed');
+assert.equal(tripPhase({...trip,arrival_at:null},arrival),'in_progress');
+assert.equal(tripPhase({...trip,arrival_at:'invalid'},arrival),'in_progress');
+assert.equal(tripPhase({...trip,departure_at:'2026-11-12T13:00:00+01:00'},departure),'in_progress');
+assert.equal(canReserveTrip(trip,departure-1),true);
+assert.equal(canReserveTrip(trip,departure),false);
+assert.equal(canReserveTrip({...trip,seats_available:0},departure-1),false);
+assert.equal(canReserveTrip({...trip,departure_at:null},departure-1),false);
+const form={date:'2026-11-13',time:'08:00',arrival:'09:00'};
+for(const value of ['', '08:00', '07:59', '25:00'])assert.equal(parseTripSchedule({...form,arrival:value},departure).field,'arrival');
+assert.equal(parseTripSchedule({...form,date:'2026-02-30'},departure).field,'date');
+assert.equal(parseTripSchedule({...form,time:'24:00'},departure).field,'time');
+assert.equal(parseTripSchedule(form,departure).arrive>parseTripSchedule(form,departure).depart,true);
+assert.equal(form.arrival,'09:00');
+console.log('Trip lifecycle: exact boundaries, booking closure, legacy schedules and required arrival passed.');

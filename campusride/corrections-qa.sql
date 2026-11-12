@@ -19,7 +19,7 @@ BEGIN
  outsider:=campusride.api(jsonb_build_object('op','register','name','QA-corrections-outsider-'||n,'password',pw,'starting_point','Nantes'));
  IF a->>'ok' IS DISTINCT FROM 'true' OR b->>'ok' IS DISTINCT FROM 'true' OR c->>'ok' IS DISTINCT FROM 'true' OR outsider->>'ok' IS DISTINCT FROM 'true' THEN RAISE EXCEPTION 'QA register failed'; END IF;
 
- payload:=jsonb_build_object('op','publish','token',a->>'token','request_id','bad-publish','starting_point','Beaulieu','end_point','Commerce','departure_at',now()+interval '2 days','seats_total',3,'price',3,'stops',jsonb_build_array(jsonb_build_object('place','Joliverie','time','25:00')));
+ payload:=jsonb_build_object('op','publish','token',a->>'token','request_id','bad-publish','starting_point','Beaulieu','end_point','Commerce','departure_at',now()+interval '2 days','arrival_at',now()+interval '2 days 1 hour','seats_total',3,'price',3,'stops',jsonb_build_array(jsonb_build_object('place','Joliverie','time','25:00')));
  r:=campusride.api(payload); IF r->>'ok'='true' THEN RAISE EXCEPTION 'QA invalid stop time accepted'; END IF;
  r:=campusride.api(payload||jsonb_build_object('request_id','bad-place','stops','[null]'::jsonb)); IF r->>'ok'='true' THEN RAISE EXCEPTION 'QA malformed stop accepted'; END IF;
  r:=campusride.api(payload||jsonb_build_object('request_id','bad-null','stops','null'::jsonb)); IF r->>'ok'='true' THEN RAISE EXCEPTION 'QA null stops accepted'; END IF;

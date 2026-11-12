@@ -92,7 +92,7 @@ BEGIN
    END IF;
    dt:=(p->>'departure_at')::timestamptz; arr:=NULLIF(p->>'arrival_at','')::timestamptz; capacity:=(p->>'seats_total')::integer; fare:=(p->>'price')::numeric;
    IF dt IS NULL OR dt<=now() OR capacity IS NULL OR capacity NOT BETWEEN 1 AND 8 OR fare IS NULL OR fare<0 OR fare>9999 OR length(btrim(COALESCE(p->>'starting_point','')))<2 OR length(btrim(COALESCE(p->>'end_point','')))<2 OR lower(btrim(p->>'starting_point'))=lower(btrim(p->>'end_point')) THEN RAISE EXCEPTION 'Vérifiez les lieux, la date future, les places et le prix.'; END IF;
-   IF arr IS NOT NULL AND arr<=dt THEN RAISE EXCEPTION 'L’arrivée doit être après le départ.'; END IF;
+   IF arr IS NULL OR arr<=dt THEN RAISE EXCEPTION 'L’heure d’arrivée est obligatoire et doit être après le départ.'; END IF;
    PERFORM campusride.validate_stops(COALESCE(p->'stops','[]'::jsonb));
    IF op='publish' THEN
    INSERT INTO public.carpools(author_id,title,starting_point,end_point,departure_at,arrival_at,seats_total,price,meeting_point,stops) VALUES(uid,left(p->>'starting_point',200)||' → '||left(p->>'end_point',200),left(btrim(p->>'starting_point'),300),left(btrim(p->>'end_point'),300),dt,arr,capacity,fare,left(p->>'meeting_point',2000),COALESCE(p->'stops','[]')) RETURNING id INTO tid;
