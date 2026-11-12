@@ -73,5 +73,12 @@
   },
   "remaining": [
     "Permanent top/bottom bars and composer anchored to host viewport unavailable in current classic Free Appsmith widget."
-  ]
+  ],
+  "followup_avis": {
+    "report": "AVIS-20261111.md",
+    "live_validation": "avis-schema-live-validation.json",
+    "table": "public.avis",
+    "reviews_now": 6,
+    "initial_totals_are_historical": true
+  }
 }

@@ -7,6 +7,12 @@ DECLARE
  n text:=encode(extensions.gen_random_bytes(8),'hex');
  pw text:=encode(extensions.gen_random_bytes(20),'hex');
 BEGIN
+ -- Physical table and security must match both fresh installs and moved installs.
+ IF to_regclass('public.avis') IS NULL OR to_regclass('campusride.reviews') IS NOT NULL THEN RAISE EXCEPTION 'QA avis physical table mismatch'; END IF;
+ IF NOT (SELECT relrowsecurity FROM pg_class WHERE oid='public.avis'::regclass) THEN RAISE EXCEPTION 'QA avis RLS disabled'; END IF;
+ IF has_table_privilege('anon','public.avis','SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') OR has_table_privilege('authenticated','public.avis','SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') OR EXISTS(SELECT 1 FROM pg_class c CROSS JOIN LATERAL aclexplode(COALESCE(c.relacl,acldefault('r',c.relowner))) a WHERE c.oid='public.avis'::regclass AND a.grantee=0) THEN RAISE EXCEPTION 'QA avis direct table privileges exposed'; END IF;
+ IF pg_get_serial_sequence('public.avis','id') IS NULL THEN RAISE EXCEPTION 'QA avis identity sequence missing'; END IF;
+ IF has_sequence_privilege('anon',pg_get_serial_sequence('public.avis','id'),'USAGE,SELECT,UPDATE') OR has_sequence_privilege('authenticated',pg_get_serial_sequence('public.avis','id'),'USAGE,SELECT,UPDATE') OR EXISTS(SELECT 1 FROM pg_class c CROSS JOIN LATERAL aclexplode(COALESCE(c.relacl,acldefault('S',c.relowner))) a WHERE c.oid=pg_get_serial_sequence('public.avis','id')::regclass AND a.grantee=0) THEN RAISE EXCEPTION 'QA avis identity privileges exposed'; END IF;
  a:=campusride.api(jsonb_build_object('op','register','name','QA-corrections-driver-'||n,'password',pw,'starting_point','Beaulieu'));
  b:=campusride.api(jsonb_build_object('op','register','name','QA-corrections-passenger-'||n,'password',pw,'starting_point','Commerce'));
  c:=campusride.api(jsonb_build_object('op','register','name','QA-corrections-second-'||n,'password',pw,'starting_point','Duchesse Anne'));
@@ -63,6 +69,8 @@ BEGIN
  r:=campusride.api(jsonb_build_object('op','review','token',outsider->>'token','request_id','outsider-review','trip_id',t,'recipient_id',a#>>'{data,profile,id}','rating',5)); IF r->>'ok'='true' THEN RAISE EXCEPTION 'QA outsider review accepted'; END IF;
  r:=campusride.api(jsonb_build_object('op','review','token',b->>'token','request_id','passenger-review','trip_id',t,'recipient_id',c#>>'{data,profile,id}','rating',5)); IF r->>'ok'='true' THEN RAISE EXCEPTION 'QA unrelated passenger review accepted'; END IF;
  r:=campusride.api(jsonb_build_object('op','review','token',b->>'token','request_id','valid-review','trip_id',t,'recipient_id',a#>>'{data,profile,id}','rating',5,'comment','Trajet de test terminé, avis vérifié.')); IF r->>'ok' IS DISTINCT FROM 'true' THEN RAISE EXCEPTION 'QA valid past review: %',r; END IF;
+ IF NOT EXISTS(SELECT 1 FROM public.avis WHERE carpool_id=t AND author_id=(b#>>'{data,profile,id}')::bigint AND recipient_id=(a#>>'{data,profile,id}')::bigint AND rating=5) THEN RAISE EXCEPTION 'QA review not stored in public.avis'; END IF;
+ IF NOT EXISTS(SELECT 1 FROM jsonb_array_elements(r#>'{data,reviews}') x WHERE (x->>'carpool_id')::bigint=t AND (x->>'author_id')::bigint=(b#>>'{data,profile,id}')::bigint) THEN RAISE EXCEPTION 'QA reviews API key compatibility failed'; END IF;
  r:=campusride.api(jsonb_build_object('op','review','token',b->>'token','request_id','duplicate-review','trip_id',t,'recipient_id',a#>>'{data,profile,id}','rating',4)); IF r->>'ok'='true' THEN RAISE EXCEPTION 'QA duplicate review accepted'; END IF;
 
  -- A past cancelled reservation remains reachable from its owned notification.

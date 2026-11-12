@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-11",
+  "project_ref": "hsnzrpcficwwmyezdjsj",
+  "cause": "Review table existed in private campusride schema and was absent from the default public schema list.",
+  "before": {
+    "table": "campusride.reviews",
+    "rows": 5,
+    "rows_md5": "4a69000ea3b86bdbd6881279acb560de"
+  },
+  "after": {
+    "table": "public.avis",
+    "physical_table": true,
+    "table_oid": 17901,
+    "old_rows_identical": true,
+    "legacy_table_absent": true,
+    "rows_after_live_ui_test": 6,
+    "rls_enabled": true,
+    "anon_and_authenticated_table_access_revoked": true,
+    "api_and_snapshot_changed_only_table_reference": true,
+    "snapshot_json_key": "reviews"
+  },
+  "live_test": {
+    "published_app_branch": "master",
+    "writer": "Démo — Alice Martin",
+    "recipient": "Démo — Léa Dubois",
+    "trip_id": 6,
+    "new_review_id": 9,
+    "rating": 4,
+    "appsmith_success": true,
+    "supabase_row_verified": true,
+    "recipient_review_visible": true,
+    "recipient_mean": 4.5
+  },
+  "table_url": "https://supabase.com/dashboard/project/hsnzrpcficwwmyezdjsj/editor/17901?schema=public",
+  "proof": "avis-supabase-proof.jpg",
+  "sql_backup": "Private local backups, excluded from Git.",
+  "mobile_bars": "Separate work remains pending; no mobile shell code was included in this database fix.",
+  "final_business_counts": {
+    "users": 10,
+    "trips": 66,
+    "bookings": 17,
+    "messages": 3,
+    "avis": 6
+  },
+  "pending_demo_reviews": {
+    "extra_booking_added": 1,
+    "trip_id": 5,
+    "participants": [
+      "Démo — Karim Benali",
+      "Démo — Léa Dubois"
+    ],
+    "ui_button_for_Lea_to_Karim_verified": true,
+    "reviews_added_by_fixture": 0
+  }
+}

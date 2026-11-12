@@ -100,6 +100,12 @@ def prepare(start: date, end: date, now: datetime) -> dict:
         bookings[-1]["seed_reviews"] = False
         bookings[-1]["purpose"] = "Conserver les deux avis Alice/Léa non rédigés pour vérification dans l’application."
 
+    teacher_review_trip_key = "lea-launch-2026-11-11"
+    if any(trip["key"] == teacher_review_trip_key for trip in trips):
+        book(teacher_review_trip_key, "demo_karim", "teacher-pending-review-example", "Réservation pour garder un test d’avis disponible")
+        bookings[-1]["seed_reviews"] = False
+        bookings[-1]["purpose"] = "Garder les avis Karim/Léa non rédigés pour la démonstration et le test par l’enseignant."
+
     by_trip = {trip["key"]: trip for trip in trips}
     reviews: list[dict] = []
     for booking in bookings:
@@ -142,6 +148,9 @@ def prepare(start: date, end: date, now: datetime) -> dict:
             {"case": "pending-review", "trip_key": pending_trip_key,
              "participants": ["demo_alice", "demo_lea"],
              "expected": "Réservation confirmée et aucun avis prérempli pour ce duo. Après l’arrivée réelle, Léa peut rédiger son avis sur Alice ; le retour Alice vers Léa reste également disponible."},
+            {"case": "teacher-pending-review", "trip_key": teacher_review_trip_key,
+             "participants": ["demo_karim", "demo_lea"],
+             "expected": "Après l’arrivée réelle, Karim et Léa peuvent chacun rédiger un avis sur l’autre ; aucun de ces deux avis n’est prérempli."},
         ],
     }
 
@@ -274,7 +283,7 @@ BEGIN
    review_key:=(item->>'trip_key')||':'||(item->>'author_key')||':'||(item->>'recipient_key');
    SELECT entity_id INTO existing_id FROM campusride.demo_entities WHERE namespace=ns AND kind='review' AND entity_key=review_key;
    IF existing_id IS NOT NULL THEN
-     IF NOT EXISTS(SELECT 1 FROM campusride.reviews WHERE id=existing_id) THEN RAISE EXCEPTION 'Demo review mapping is stale; manual inspection required.'; END IF;
+     IF NOT EXISTS(SELECT 1 FROM public.avis WHERE id=existing_id) THEN RAISE EXCEPTION 'Demo review mapping is stale; manual inspection required.'; END IF;
      CONTINUE;
    END IF;
    SELECT entity_id INTO trip_id FROM campusride.demo_entities WHERE namespace=ns AND kind='trip' AND entity_key=item->>'trip_key';
@@ -287,7 +296,7 @@ BEGIN
            OR (loaded_trip.author_id=review_recipient AND EXISTS(SELECT 1 FROM public.bookings WHERE carpools_id=trip_id AND passenger_id=review_author AND status='confirmed'))) THEN
      RAISE EXCEPTION 'A demonstration review requires an actually finished shared trip.';
    END IF;
-   INSERT INTO campusride.reviews(carpool_id,author_id,recipient_id,rating,comment)
+   INSERT INTO public.avis(carpool_id,author_id,recipient_id,rating,comment)
      VALUES(trip_id,review_author,review_recipient,(item->>'rating')::integer,item->>'comment') RETURNING id INTO new_id;
    INSERT INTO campusride.demo_entities VALUES(ns,'review',review_key,new_id,now());
  END LOOP;

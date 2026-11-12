@@ -1,0 +1,35 @@
+{
+  "passed": true,
+  "environment": "isolated Docker PostgreSQL 17, no published port",
+  "production_access": false,
+  "initial_reviews": 5,
+  "rows_and_checksum_preserved": true,
+  "current_function_definitions_changed_only_table_reference": true,
+  "same_table_constraint_index_and_identity_sequence_oids": true,
+  "incompatible_target_rejected_atomically": true,
+  "duplicate_future_and_third_party_review_guards": true,
+  "valid_api_insert_visible_in_public_avis": true,
+  "reviews_after_api_insert": 6,
+  "second_migration_idempotent": true,
+  "fresh_install": {
+    "passed": true,
+    "source": "work/avis-schema-repo/campusride",
+    "creates_only_public_avis": true,
+    "backend_qa_rolled_back": true,
+    "corrections_qa_rolled_back": true,
+    "seed_reviews": 4,
+    "migration_twice_idempotent": true,
+    "supabase_like_default_grants_revoked": true
+  },
+  "checks": {
+    "rls_enabled": true,
+    "physical_table": true,
+    "anon_table_denied": true,
+    "api_still_private": true,
+    "anon_sequence_denied": true,
+    "api_reference_changed": true,
+    "authenticated_table_denied": true,
+    "snapshot_reference_changed": true,
+    "authenticated_sequence_denied": true
+  }
+}

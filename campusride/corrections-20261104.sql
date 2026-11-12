@@ -39,7 +39,7 @@ SELECT jsonb_build_object(
  'bookings',COALESCE((SELECT jsonb_agg(to_jsonb(t)) FROM (SELECT b.*,u.name AS passenger_name FROM public.bookings b JOIN public.users u ON u.id=b.passenger_id JOIN public.carpools c ON c.id=b.carpools_id WHERE b.passenger_id=uid OR c.author_id=uid)t),'[]'),
  'messages',COALESCE((SELECT jsonb_agg(to_jsonb(t) ORDER BY t.created_at) FROM (SELECT m.*,s.name AS sender_name,r.name AS recipient_name FROM public.messages m JOIN public.users s ON s.id=m.sender_id JOIN public.users r ON r.id=m.recipient_id WHERE m.sender_id=uid OR m.recipient_id=uid ORDER BY m.created_at DESC LIMIT 500)t),'[]'),
  'notifications',COALESCE((SELECT jsonb_agg(to_jsonb(t) ORDER BY t.created_at DESC) FROM (SELECT n.*,a.name AS actor_name FROM campusride.notifications n LEFT JOIN public.users a ON a.id=n.actor_id WHERE n.user_id=uid ORDER BY n.created_at DESC,n.id DESC LIMIT 100)t),'[]'),
- 'reviews',COALESCE((SELECT jsonb_agg(to_jsonb(t)) FROM (SELECT r.*,u.name AS author_name,v.name AS recipient_name FROM campusride.reviews r JOIN public.users u ON u.id=r.author_id JOIN public.users v ON v.id=r.recipient_id WHERE r.author_id=uid OR r.recipient_id=uid)t),'[]')
+ 'reviews',COALESCE((SELECT jsonb_agg(to_jsonb(t)) FROM (SELECT r.*,u.name AS author_name,v.name AS recipient_name FROM public.avis r JOIN public.users u ON u.id=r.author_id JOIN public.users v ON v.id=r.recipient_id WHERE r.author_id=uid OR r.recipient_id=uid)t),'[]')
 );
 $$;
 CREATE OR REPLACE FUNCTION campusride.api(p jsonb) RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER SET search_path='' AS $$
@@ -138,7 +138,7 @@ BEGIN
    ELSE
      other_id:=(p->>'recipient_id')::bigint;
      IF trip.status='cancelled' OR COALESCE(trip.arrival_at,trip.departure_at)>now() OR other_id=uid OR NOT ((trip.author_id=uid AND EXISTS(SELECT 1 FROM public.bookings WHERE carpools_id=tid AND passenger_id=other_id AND status='confirmed')) OR (trip.author_id=other_id AND EXISTS(SELECT 1 FROM public.bookings WHERE carpools_id=tid AND passenger_id=uid AND status='confirmed'))) THEN RAISE EXCEPTION 'Un avis nécessite un trajet effectué ensemble.'; END IF;
-     INSERT INTO campusride.reviews(carpool_id,author_id,recipient_id,rating,comment) VALUES(tid,uid,other_id,(p->>'rating')::integer,left(COALESCE(p->>'comment',''),2000));
+     INSERT INTO public.avis(carpool_id,author_id,recipient_id,rating,comment) VALUES(tid,uid,other_id,(p->>'rating')::integer,left(COALESCE(p->>'comment',''),2000));
    END IF;
  ELSIF op='message' THEN
    tid:=(p->>'trip_id')::bigint; other_id:=(p->>'recipient_id')::bigint;
