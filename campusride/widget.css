@@ -181,3 +181,31 @@ html,body,#root{width:100%;height:auto;min-width:0;min-height:0;background:white
 .chat-dock{width:100%;max-width:1000px;margin-inline:auto;padding:12px clamp(16px,4vw,24px);background:white;border-top:1px solid var(--border)}
 .chat-dock .composer{margin:0}
 .page-chat{padding-bottom:16px}
+
+/* Mobile viewport anchors. The host page still owns the only content scrollbar.
+   IO geometry only moves the bars; stable spacers keep the document's content in place. */
+.navigation-dock{width:100%;flex-shrink:0;background:white}
+.navigation-dock:empty{display:none}
+@media(max-width:900px){
+ .desktop-caption{display:none}
+ .phone[data-viewport-bars="pinned"],.phone[data-viewport-bars="editing"]{
+  min-height:var(--viewport-cover-height,0px);
+  padding-top:var(--viewport-header-height,64px);
+ }
+ .phone[data-viewport-bars="pinned"]{padding-bottom:var(--viewport-dock-height,0px)}
+ .phone[data-viewport-bars="pinned"]>.top,.phone[data-viewport-bars="editing"]>.top{
+  position:absolute;inset-inline:0;width:100%;max-width:none;z-index:10;
+  top:clamp(0px,var(--viewport-top,0px),max(0px,calc(100% - var(--viewport-header-height,64px))));
+ }
+ .phone[data-viewport-bars="pinned"]>.navigation-dock{
+  position:absolute;inset-inline:0;width:100%;z-index:10;
+  top:clamp(0px,calc(var(--viewport-bottom,100%) - var(--viewport-dock-height,0px)),max(0px,calc(100% - var(--viewport-dock-height,0px))));
+ }
+ /* The keyboard-adjusted parent visual viewport is not exposed to this sandbox.
+    On coarse touch screens only, releasing the footer while editing lets the browser
+    reveal the focused field. Desktop input focus keeps both bars pinned. */
+ .phone[data-viewport-bars="editing"]{padding-bottom:0}
+ .phone[data-viewport-bars="editing"]>.navigation-dock{position:static}
+ .navigation-dock .bottom{position:static}
+ .chatlog,.content{overflow:visible;max-height:none}
+}

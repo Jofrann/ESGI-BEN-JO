@@ -21,8 +21,119 @@ function matchedRoute(t,from='',to=''){
 }
 function Field({label,id,error,children,help}){return <div className="field"><label htmlFor={id}>{label}</label>{children}{help&&<small id={id+'-help'}>{help}</small>}{error&&<small className="err" id={id+'-error'}>{error}</small>}</div>}
 function Password({id,label='Mot de passe',value,onChange}){const [show,setShow]=useState(false);return <Field id={id} label={label}><div className="password"><input id={id} type={show?'text':'password'} value={value} onChange={onChange} autoComplete={id==='login-password'?'current-password':'new-password'} maxLength={72}/><button type="button" className="iconbtn" aria-label={show?'Masquer le mot de passe':'Afficher le mot de passe'} aria-pressed={show} onClick={()=>setShow(!show)}><Icon name="eye"/></button></div></Field>}
+// Only this frame's own elements are observed. Appsmith keeps the sole page scroll.
+// IO is asynchronous: these anchors follow the visible layout viewport, not a guaranteed
+// keyboard-adjusted visual viewport. On coarse touch screens, editable fields therefore
+// release the footer to flow; desktop focus leaves both bars anchored.
+function viewportBarGeometry(surface,intersection,headerHeight,dockHeight){
+ const height=Math.max(0,Number(surface.height)||0);
+ const start=Math.max(0,Math.min(height,(Number(intersection.top)||0)-(Number(surface.top)||0)));
+ const end=Math.max(start,Math.min(height,start+Math.max(0,Number(intersection.height)||0)));
+ return {top:Math.min(start,Math.max(0,height-headerHeight)),bottom:end,
+  footerTop:Math.max(0,Math.min(Math.max(0,height-dockHeight),end-dockHeight))};
+}
+function useMobileViewportBars(phoneRef){
+ useEffect(()=>{
+  const phone=phoneRef.current;
+  if(!phone||typeof IntersectionObserver==='undefined')return;
+  const header=phone.querySelector(':scope > .top');
+  const dock=phone.querySelector(':scope > .navigation-dock');
+  let disposed=false,frame=0,focusFrame=0,lastProbe=-Infinity,waiting=false;
+  let sizesDirty=true,headerHeight=0,dockHeight=0,maxCoverHeight=0,narrow=false;
+  const values=new Map();
+  const setNumber=(name,value)=>{
+   if(!Number.isFinite(value))return;
+   value=Math.max(0,value);
+   if(!values.has(name)||Math.abs(values.get(name)-value)>.5){
+    phone.style.setProperty(name,value.toFixed(2)+'px');values.set(name,value);
+   }
+  };
+  const keyboardScene=()=>window.matchMedia?.('(hover: none) and (pointer: coarse)').matches===true;
+  const editable=()=>{const el=document.activeElement;return keyboardScene()&&!!el&&phone.contains(el)&&el.matches('input,textarea,[contenteditable="true"]');};
+  const setMode=mode=>{if(phone.dataset.viewportBars!==mode){phone.dataset.viewportBars=mode;sizesDirty=true;}};
+  const updateMode=()=>setMode(narrow?(editable()?'editing':'pinned'):'natural');
+  const schedule=()=>{if(!disposed&&!document.hidden&&!frame&&!waiting)frame=requestAnimationFrame(probe);};
+  const probe=time=>{
+   frame=0;
+   if(disposed||document.hidden||waiting)return;
+   // At most about 30 geometry samples per second; no React render for scroll updates.
+   if(time-lastProbe<32){schedule();return;}
+   lastProbe=time;waiting=true;
+   observer.unobserve(phone);observer.observe(phone);
+  };
+  const apply=entry=>{
+   const surface=entry.boundingClientRect;
+   narrow=surface.width>0&&surface.width<=900;
+   if(!narrow){updateMode();return;}
+   // Read sizes as one group before writing CSS. The dock itself always exists,
+   // and ResizeObserver invalidates its measurement when chat/navigation changes.
+   if(sizesDirty){headerHeight=header?.getBoundingClientRect().height||0;dockHeight=dock?.getBoundingClientRect().height||0;sizesDirty=false;}
+   const nativeHeight=Number(appsmith.model?.viewport?.height)||0;
+   const screenWidth=Number(window.screen?.width)||0,screenHeight=Number(window.screen?.height)||0;
+   const physicalMobile=screenWidth>0&&screenHeight>0&&Math.max(screenWidth,screenHeight)<=1024;
+   // Never derive the floor from body/iframe height: doing so feeds AUTO_HEIGHT back
+   // into itself. Desktop coverage uses SCREEN HEIGHT only, never its potentially huge width.
+   // A short page can consequently have blank scroll space, but future height-only growth
+   // stays observable without shrinking the iframe or reading the parent document.
+   const availableScreenHeight=Number(window.screen?.availHeight)||0;
+   const screenCover=physicalMobile?Math.max(screenWidth,screenHeight):Math.max(screenHeight,availableScreenHeight);
+   maxCoverHeight=Math.max(maxCoverHeight,nativeHeight,screenCover);
+   if(maxCoverHeight>0)setNumber('--viewport-cover-height',maxCoverHeight);
+   if(entry.intersectionRect.height>0&&entry.intersectionRect.width>0){
+    const geometry=viewportBarGeometry(surface,entry.intersectionRect,headerHeight,dockHeight);
+    setNumber('--viewport-top',geometry.top);setNumber('--viewport-bottom',geometry.bottom);
+   }
+   setNumber('--viewport-header-height',headerHeight);setNumber('--viewport-dock-height',dockHeight);
+   updateMode();
+  };
+  const observer=new IntersectionObserver(entries=>{
+   waiting=false;
+   if(disposed||document.hidden)return;
+   // A fresh observe queues an initial entry even if the intersection ratio stayed
+   // constant while the host scrolled. Use its rectangle, never rootBounds/parent DOM.
+   const entry=entries.reduce((latest,item)=>!latest||item.time>=latest.time?item:latest,null);
+   if(entry)apply(entry);
+   if(narrow)schedule();
+  },{root:null,threshold:[0,1]});
+  const wake=()=>{sizesDirty=true;waiting=false;schedule();};
+  const resize=typeof ResizeObserver==='undefined'?null:new ResizeObserver(wake);
+  if(header)resize?.observe(header);if(dock)resize?.observe(dock);
+  const focusIn=e=>{
+   if(!narrow||!keyboardScene()||!e.target.matches?.('input,textarea,[contenteditable="true"]'))return;
+   setMode('editing');
+   cancelAnimationFrame(focusFrame);
+   focusFrame=requestAnimationFrame(()=>{
+    if(!disposed&&document.activeElement===e.target)e.target.scrollIntoView({block:'nearest',inline:'nearest'});
+   });
+   wake();
+  };
+  const focusOut=()=>{
+   cancelAnimationFrame(focusFrame);
+   focusFrame=requestAnimationFrame(()=>{if(!disposed){updateMode();wake();}});
+  };
+  const visibility=()=>{
+   if(document.hidden){cancelAnimationFrame(frame);frame=0;waiting=false;observer.unobserve(phone);}
+   else wake();
+  };
+  phone.addEventListener('focusin',focusIn);phone.addEventListener('focusout',focusOut);
+  window.addEventListener('resize',wake,{passive:true});window.addEventListener('pageshow',wake);
+  document.addEventListener('visibilitychange',visibility);
+  window.screen?.orientation?.addEventListener?.('change',wake);
+  const stopUi=typeof appsmith.onUiChange==='function'?appsmith.onUiChange(wake):null;
+  schedule();
+  return ()=>{
+   disposed=true;cancelAnimationFrame(frame);cancelAnimationFrame(focusFrame);observer.disconnect();resize?.disconnect();
+   phone.removeEventListener('focusin',focusIn);phone.removeEventListener('focusout',focusOut);
+   window.removeEventListener('resize',wake);window.removeEventListener('pageshow',wake);
+   document.removeEventListener('visibilitychange',visibility);
+   window.screen?.orientation?.removeEventListener?.('change',wake);
+   if(typeof stopUi==='function')stopUi();
+  };
+ },[]);
+}
 function App(){
  const [page,setPage]=useState('welcome'),[data,setData]=useState(null),[token,setToken]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[modal,setModal]=useState(null),[tripId,setTripId]=useState(null),[dashTab,setDashTab]=useState('all'),[search,setSearch]=useState({from:'',to:'',date:''}),[filters,setFilters]=useState({price:'',before:'',seats:'1'}),[chatWith,setChatWith]=useState(null),[msg,setMsg]=useState(''),[rating,setRating]=useState(5),[auth,setAuth]=useState({name:'',password:'',confirm:'',school:'',starting_point:''}),[form,setForm]=useState({starting_point:'',end_point:'',date:'',time:'',arrival:'',seats_total:'3',price:'3',meeting_point:'',stops:[]}),[edit,setEdit]=useState(null),[editingTrip,setEditingTrip]=useState(null),[tripConflict,setTripConflict]=useState(false);
+ const phone=useRef(null);useMobileViewportBars(phone);
  const tripBaseline=useRef(JSON.stringify(freshTripForm()));const lastFocus=useRef(null),modalRef=useRef(null),main=useRef(null),lock=useRef(false);const profile=data?.profile,trips=data?.trips||[],bookings=data?.bookings||[],messages=data?.messages||[],reviews=data?.reviews||[],notifications=(data?.notifications||[]).filter(n=>profile?.preferences?.[n.kind]!==false);
  const trip=trips.find(t=>t.id===tripId),myBooking=t=>bookings.find(b=>b.carpools_id===t.id&&b.passenger_id===profile?.id&&b.status==='confirmed'),own=t=>t.author_id===profile?.id;
  const go=(p)=>{setPage(p);setError('');setNotice('');requestAnimationFrame(()=>{main.current?.focus({preventScroll:true});document.getElementById('root')?.scrollIntoView({block:'start'});});};
@@ -69,7 +180,7 @@ function App(){
  const results=trips.filter(t=>t.status==='published'&&new Date(t.departure_at)>new Date()&&matchedRoute(t,search.from,search.to)&&(!search.date||new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(t.departure_at))===search.date)&&t.seats_available>=Number(filters.seats)&&(!filters.price||Number(t.price)<=Number(filters.price))&&(!filters.before||hour(t.departure_at)<=filters.before)).sort((a,b)=>a.departure_at.localeCompare(b.departure_at));
  const headings={dashboard:'',search:'Rechercher un trajet',results:'Trajets disponibles',publish:'Publier un trajet',edit_trip:'Modifier le trajet',published:'Mes trajets publiés',detail:'Détails du trajet',manage:'Gestion du trajet',history:'Historique',profile:'Profil',edit:'Modifier mes informations',reviews:'Avis reçus',settings:'Paramètres',messages:'Messages',chat:'Messages',notifications:'Notifications',review:'Laisser un avis'};
  const actionSubmit=async e=>{e.preventDefault();if(auth.name.trim().length<2){setError('Saisissez votre nom.');document.getElementById('auth-name')?.focus();return;}if(page==='register'&&(auth.password!==auth.confirm||auth.password.length<10)){setError('Les mots de passe doivent correspondre et comporter au moins 10 caractères.');return;}await act(page==='register'?'register':'login',auth,()=>{setAuth({name:'',password:'',confirm:'',school:'',starting_point:''});go('dashboard');});};
- return <div className="app"><div className="phone"><header className="top"><div className="brand"><span className="logo"><Icon name="car" size={20}/></span>Campus<span>Ride</span></div>{profile&&<div className="header-actions"><button className="iconbtn" aria-label="Notifications" onClick={()=>navigate('notifications')}><Icon name="bell"/>{notifications.some(n=>!n.read_at)&&<i className="unread"/>}</button><button className="avatar" aria-label="Mon profil" onClick={()=>navigate('profile')}>{profile.avatar_url?<img alt="Votre profil" src={profile.avatar_url}/>:initials(profile.name)}</button></div>}</header>
+ return <div className="app"><div className="phone" ref={phone} data-viewport-bars="pending"><header className="top"><div className="brand"><span className="logo"><Icon name="car" size={20}/></span>Campus<span>Ride</span></div>{profile&&<div className="header-actions"><button className="iconbtn" aria-label="Notifications" onClick={()=>navigate('notifications')}><Icon name="bell"/>{notifications.some(n=>!n.read_at)&&<i className="unread"/>}</button><button className="avatar" aria-label="Mon profil" onClick={()=>navigate('profile')}>{profile.avatar_url?<img alt="Votre profil" src={profile.avatar_url}/>:initials(profile.name)}</button></div>}</header>
  <main ref={main} tabIndex="-1" className={(profile?'content':'content auth')+(page==='chat'?' page-chat':'')}>{busy&&<div className="loading" role="status">Traitement en cours…</div>}{error&&<div className="alert error" role="alert">{error}</div>}{notice&&<div className="alert success" role="status">{notice}</div>}
  {!profile&&page==='welcome'&&<section className="welcome"><div className="illustration" aria-hidden="true"><svg viewBox="0 0 300 210"><ellipse cx="150" cy="106" rx="112" ry="88" fill="#e7f6f1"/><path d="M100 77l55-28 54 28v63H100z" fill="#c3e8dc"/><path d="M91 77l64-32 65 32" fill="none" stroke="#c3e8dc" strokeWidth="13"/><text x="129" y="87" fill="#298b76" fontSize="11" fontWeight="bold">CAMPUS</text><rect x="52" y="128" width="196" height="44" rx="15" fill="#09967d"/><path d="M83 128l28-36h68l35 36" fill="#09967d"/><path d="M101 123l17-24h23v24zm49 0V99h24l24 24z" fill="white"/><circle cx="91" cy="170" r="18" fill="#163b3a" stroke="white" strokeWidth="5"/><circle cx="210" cy="170" r="18" fill="#163b3a" stroke="white" strokeWidth="5"/><path d="M29 186h245" stroke="#c3ded6" strokeWidth="3"/></svg></div><h1>Le covoiturage entre étudiants</h1><p className="muted">Partagez vos trajets vers le campus. Moins de frais, plus de rencontres.</p><div className="welcome-actions"><button className="btn" onClick={()=>go('login')}>Se connecter</button><button className="btn secondary" onClick={()=>go('register')}>S’inscrire</button><small className="muted">Votre campus, en bonne compagnie.</small></div></section>}
  {!profile&&['login','register'].includes(page)&&<><button className="back" onClick={()=>go('welcome')}><Icon name="arrow"/> Retour</button><h1>{page==='login'?'Bon retour !':'Rejoignez le mouvement'}</h1><p className="muted">{page==='login'?'Retrouvez vos prochains trajets et votre communauté étudiante.':'Un compte, des trajets à partager.'}</p><form noValidate onSubmit={actionSubmit}><Field id="auth-name" label="Nom / identifiant"><input id="auth-name" value={auth.name} autoComplete="username" onChange={e=>setAuth({...auth,name:e.target.value})} maxLength={100}/></Field><Password id="login-password" value={auth.password} onChange={e=>setAuth({...auth,password:e.target.value})}/>{page==='register'&&<><Password id="confirm-password" label="Confirmation" value={auth.confirm} onChange={e=>setAuth({...auth,confirm:e.target.value})}/><small className="muted">10 caractères minimum. Votre mot de passe reste masqué et est stocké sous forme hachée.</small><Field id="auth-school" label="École (facultatif)"><input id="auth-school" value={auth.school} onChange={e=>setAuth({...auth,school:e.target.value})}/></Field><Field id="auth-start" label="Lieu de départ habituel"><input id="auth-start" value={auth.starting_point} onChange={e=>setAuth({...auth,starting_point:e.target.value})} maxLength={300}/></Field></>}<button className="btn" disabled={busy}>{page==='login'?'Se connecter':'Créer mon compte'}</button></form>{page==='login'&&<button className="textbtn full" onClick={()=>{setAuth({...auth,password:'',confirm:''});go('recovery');}}>Mot de passe oublié ?</button>}<p className="center muted tiny">{page==='login'?'Pas encore de compte ?':'Déjà un compte ?'} <button className="textbtn" onClick={()=>go(page==='login'?'register':'login')}>{page==='login'?'S’inscrire':'Se connecter'}</button></p></>}
@@ -91,7 +202,7 @@ function App(){
  {page==='messages'&&<><p className="muted">Échangez avec vos covoitureurs.</p>{Array.from(new Set(messages.map(m=>m.sender_id===profile.id?m.recipient_id:m.sender_id))).map(id=>{const group=messages.filter(m=>m.sender_id===id||m.recipient_id===id),last=group[group.length-1],name=last.sender_id===profile.id?last.recipient_name:last.sender_name;return <button key={id} className="conversation" onClick={()=>{setChatWith({id,name,trip:last.carpool_id});go('chat');act('read_messages',{sender_id:id});}}><span className="avatar">{initials(name)}</span><span><strong>{name}</strong><small>{last.content}</small></span><Icon name="arrow" size={15}/></button>})}{!messages.length&&empty('Aucun échange','Vos échanges directs avec les conducteurs et passagers apparaîtront ici.',null,null,'message')}</>}
  {page==='chat'&&chatWith&&<><div className="person"><span className="avatar">{initials(chatWith.name)}</span><strong>{chatWith.name}</strong></div><div className="chatlog" aria-live="polite">{messages.filter(m=>(m.sender_id===chatWith.id&&m.recipient_id===profile.id)||(m.recipient_id===chatWith.id&&m.sender_id===profile.id)).map(m=><div key={m.id} className={'bubble '+(m.sender_id===profile.id?'mine':'')}><p>{m.content}</p><small>{hour(m.created_at)}</small></div>)}{!messages.some(m=>m.sender_id===chatWith.id||m.recipient_id===chatWith.id)&&<p className="muted center tiny">Convenez ensemble du point de rendez-vous.</p>}</div><button className="textbtn full" disabled={busy} onClick={()=>act('refresh')}>Actualiser la conversation</button></>}
  </>}
- </main>{profile&&page==='chat'&&chatWith&&<div className="chat-dock"><form className="composer" noValidate onSubmit={e=>{e.preventDefault();if(!msg.trim())return;act('message',{trip_id:chatWith.trip,recipient_id:chatWith.id,content:msg.trim()},()=>setMsg(''));}}><input aria-label="Votre message" placeholder="Votre message…" value={msg} maxLength={2000} onChange={e=>setMsg(e.target.value)}/><button className="btn" aria-label="Envoyer le message" disabled={busy||!msg.trim()}><Icon name="send"/></button></form></div>}{profile&&<nav className="bottom" aria-label="Navigation principale">{[['dashboard','Accueil','home'],['search','Rechercher','search'],['publish','Publier','plus'],['history','Historique','history'],['profile','Profil','profile']].map(([p,l,i])=><button key={p} className={(page===p||p==='search'&&['results','detail'].includes(page)||p==='publish'&&['published','manage','edit_trip'].includes(page)||p==='profile'&&['messages','chat','settings','edit','reviews','notifications'].includes(page))?'active':''} onClick={()=>{navigate(p);}}><Icon name={i}/><small>{l}</small></button>)}</nav>}
+ </main><footer className="navigation-dock">{profile&&page==='chat'&&chatWith&&<div className="chat-dock"><form className="composer" noValidate onSubmit={e=>{e.preventDefault();if(!msg.trim())return;act('message',{trip_id:chatWith.trip,recipient_id:chatWith.id,content:msg.trim()},()=>setMsg(''));}}><input aria-label="Votre message" placeholder="Votre message…" value={msg} maxLength={2000} onChange={e=>setMsg(e.target.value)}/><button className="btn" aria-label="Envoyer le message" disabled={busy||!msg.trim()}><Icon name="send"/></button></form></div>}{profile&&<nav className="bottom" aria-label="Navigation principale">{[['dashboard','Accueil','home'],['search','Rechercher','search'],['publish','Publier','plus'],['history','Historique','history'],['profile','Profil','profile']].map(([p,l,i])=><button key={p} className={(page===p||p==='search'&&['results','detail'].includes(page)||p==='publish'&&['published','manage','edit_trip'].includes(page)||p==='profile'&&['messages','chat','settings','edit','reviews','notifications'].includes(page))?'active':''} onClick={()=>{navigate(p);}}><Icon name={i}/><small>{l}</small></button>)}</nav>}</footer>
  {modal&&<div className="scrim" onKeyDown={e=>{if(e.key==='Escape')close();if(e.key==='Tab'){const buttons=modalRef.current.querySelectorAll('button:not([disabled])');const first=buttons[0],last=buttons[buttons.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}}}><section className="modal" ref={modalRef} role="dialog" aria-modal="true" aria-labelledby="modal-title"><span className={'empty-icon '+(['cancel_booking','cancel_trip'].includes(modal.kind)?'red':'')}><Icon name={modal.kind==='reserve'?'check':modal.kind==='logout'?'logout':'car'}/></span>{error&&<div className="alert error" role="alert">{error}</div>}{busy&&<div className="loading" role="status">Traitement en cours…</div>}<h2 id="modal-title">{{reserve:'Confirmer la réservation ?',cancel_booking:'Annuler cette réservation ?',cancel_trip:'Annuler tout le trajet ?',logout:'Se déconnecter ?',leave:'Quitter le formulaire ?',reload_trip:'Recharger la version actuelle ?'}[modal.kind]}</h2><p className="muted">{{reserve:'Une place sera réservée pour vous. Le règlement se fait directement entre étudiants.',cancel_booking:'La réservation sera annulée et la place redeviendra disponible.',cancel_trip:'Tous les passagers seront informés. Les réservations seront annulées.',logout:'Vous devrez vous reconnecter pour accéder à vos trajets.',leave:'Les modifications saisies dans ce formulaire ne sont pas encore enregistrées.',reload_trip:'Votre saisie non enregistrée sera remplacée par la version actuelle du trajet. Revenir vous permet de conserver votre saisie.'}[modal.kind]}</p>{modal.kind==='reserve'&&trip&&<div className="panel"><strong>{trip.starting_point} → {trip.end_point}</strong><p>{day(trip.departure_at)} · {hour(trip.departure_at)}</p><strong>{money(trip.price)} · 1 personne</strong></div>}<button className="btn secondary" disabled={busy} onClick={close}>{modal.kind==='leave'?'Continuer la saisie':'Retour'}</button><button className={'btn '+(['cancel_booking','cancel_trip'].includes(modal.kind)?'dangerbtn':'')} disabled={busy} onClick={()=>{if(modal.kind==='reload_trip'){reloadCurrentTrip();return;}if(modal.kind==='leave'){resetTripForm();go(modal.next||'dashboard');close();return;}if(modal.kind==='logout'){act('logout',{},()=>{setData(null);setToken('');go('login');close();});return;}act(modal.kind==='reserve'?'reserve':modal.kind,{trip_id:trip.id,booking_id:modal.booking?.id},()=>{setNotice(modal.kind==='reserve'?'Réservation confirmée.':'Annulation enregistrée.');close();});}}>{modal.kind==='reserve'?'Confirmer la réservation':modal.kind==='logout'?'Se déconnecter':modal.kind==='leave'?'Quitter le formulaire':modal.kind==='reload_trip'?'Recharger le trajet':'Oui, annuler'}</button></section></div>}
  </div><footer className="desktop-caption">CampusRide · Le covoiturage entre étudiants</footer></div>;
 }
