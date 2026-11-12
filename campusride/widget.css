@@ -209,3 +209,9 @@ html,body,#root{width:100%;height:auto;min-width:0;min-height:0;background:white
  .navigation-dock .bottom{position:static}
  .chatlog,.content{overflow:visible;max-height:none}
 }
+
+/* Keep the landscape navigation above Appsmith's native bottom-right badge.
+   The dock measurement includes this reserve, so no control is covered. */
+@media(min-width:700px) and (max-width:900px){
+ .navigation-dock{padding-bottom:48px}
+}
